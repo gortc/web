@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SDP example</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <h1>SDP example via WebRTC</h1>
+  <a href="/" class="link-back">back</a>
+  <div id="response">waiting for SDP candidates...</div>
+</body>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var configuration = { iceServers: [{
+                              urls: "stun:127.0.0.1",
+                          }]
+    };
+    var pc = new RTCPeerConnection(configuration);
+    var dc = pc.createDataChannel('webrtchacks');
+    pc.onicecandidate = function (event) {
+        if (!event.candidate)
+            // console.log(pc.localDescription.sdp);
+            fetch("/sdp",
+              {
+                method: "POST",
+                body: pc.localDescription.sdp
+            })
+            .then(function(res){ return res.text(); })
+            .then(function(data){
+              document.getElementById("response").innerHTML = data;
+            })
+    };
+    pc.createOffer(
+        function (offer) {
+            pc.setLocalDescription(offer);
+            // console.log(offer.sdp);
+        },
+        function (err) {
+           console.error(err);
+        }
+    )
+</script>
+</html>
