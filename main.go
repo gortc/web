@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/csv"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,14 +13,17 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/mssola/user_agent"
+	"github.com/pkg/errors"
+
 	"github.com/ernado/ice"
 	"github.com/ernado/sdp"
 	"github.com/ernado/stun"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -31,6 +35,17 @@ var (
 	}
 )
 
+var (
+	bindingRequest = stun.MessageType{
+		Method: stun.MethodBinding,
+		Class:  stun.ClassRequest,
+	}
+	bindingSuccessResponse = stun.MessageType{
+		Method: stun.MethodBinding,
+		Class:  stun.ClassSuccessResponse,
+	}
+)
+
 func processUDPPacket(addr net.Addr, b []byte, req, res *stun.Message) error {
 	if !stun.IsMessage(b) {
 		log.Println("packet from", addr, "is not STUN message")
@@ -39,11 +54,13 @@ func processUDPPacket(addr net.Addr, b []byte, req, res *stun.Message) error {
 	if _, err := req.ReadBytes(b); err != nil {
 		return errors.Wrap(err, "failed to read message")
 	}
-	res.TransactionID = req.TransactionID
-	res.Type = stun.MessageType{
-		Method: stun.MethodBinding,
-		Class:  stun.ClassSuccessResponse,
+	if req.Type != bindingRequest {
+		log.Println("stun: skipping", req.Type, "from", addr)
+		return nil
 	}
+	log.Println("stun: got", req.Type)
+	res.TransactionID = req.TransactionID
+	res.Type = bindingSuccessResponse
 	var (
 		ip   net.IP
 		port int
@@ -132,7 +149,7 @@ func (s *storage) collect() {
 	}
 }
 
-func (s *storage) collectCycle() {
+func (s *storage) gc() {
 	ticker := time.NewTicker(time.Second * 2)
 	for range ticker.C {
 		s.collect()
@@ -147,7 +164,6 @@ func main() {
 	http.HandleFunc("/ice-configuration", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")
 		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
 		origin := r.Header.Get("Origin")
 		server := "stun:a1.cydev.ru"
 		if len(origin) > 0 {
@@ -171,9 +187,21 @@ func main() {
 			fmt.Fprintln(w, "json encode:", err)
 		}
 	})
+
+	mLog, err := os.OpenFile("packets.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatalln("Failed to open log:", err)
+	}
+	defer mLog.Close()
+	csvLog := csv.NewWriter(mLog)
+
 	http.HandleFunc("/sdp", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		log.Println("http: got request from", r.RemoteAddr)
+		log.Println("http:", r.Method, "request from", r.RemoteAddr)
+		if r.Method == http.MethodGet {
+			http.Redirect(w, r, "/sdp/", http.StatusPermanentRedirect)
+			return
+		}
 		s := sdp.Session{}
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -224,10 +252,23 @@ func main() {
 				}
 			}
 			var (
-				b64          = base64.StdEncoding.EncodeToString(m.Bytes())
-				messageCRC64 = crc64.Checksum(m.Bytes(), crc64.MakeTable(crc64.ISO))
-				clipID       = fmt.Sprintf("crc64-%d", messageCRC64)
+				b64             = base64.StdEncoding.EncodeToString(m.Bytes())
+				messageCRC64    = crc64.Checksum(m.Bytes(), crc64.MakeTable(crc64.ISO))
+				clipID          = fmt.Sprintf("crc64-%d", messageCRC64)
+				ua              = user_agent.New(r.Header.Get("User-agent"))
+				bName, bVersion = ua.Browser()
 			)
+			if err = csvLog.Write([]string{
+				addr,
+				b64,
+				fmt.Sprintf("%d", messageCRC64),
+				bName,
+				bVersion,
+				ua.OS(),
+			}); err != nil {
+				log.Fatalln("log: failed to write:", err)
+			}
+			csvLog.Flush()
 			fmt.Fprintln(w, `<p>dumped: <code id="`+clipID+`">stun-decode`, b64, `</code>
 				<button class="btn" data-clipboard-target="#`+clipID+`">copy</button>
 			</p>`)
@@ -246,7 +287,11 @@ func main() {
 		log.Fatalf("Failed to bind udp on %s: %s", addrSTUN, err)
 	}
 	defer c.Close()
-	go messages.collectCycle()
+
+	// spawning storage garbage collector
+	go messages.gc()
+
+	// spawning STUN server
 	go func(conn net.PacketConn) {
 		log.Println("Started STUN server on", conn.LocalAddr())
 		var (
@@ -254,14 +299,14 @@ func main() {
 			req = stun.AcquireMessage()
 			buf = make([]byte, stun.MaxPacketSize)
 		)
-		defer stun.ReleaseMessage(res)
-		defer stun.ReleaseMessage(req)
 		for {
+			// ReadFrom c to buf
 			n, addr, err := c.ReadFrom(buf)
 			if err != nil {
 				log.Fatalln("c.ReadFrom:", err)
 			}
 			log.Printf("udp: got packet len(%d) from %s", n, addr)
+			// processing binding request
 			if err = processUDPPacket(addr, buf[:n], req, res); err != nil {
 				log.Println("failed to process UDP packet:", err, "from addr", addr)
 			} else {
@@ -272,9 +317,6 @@ func main() {
 			}
 			res.Reset()
 			req.Reset()
-			for i := range buf[:n] {
-				buf[i] = 0
-			}
 		}
 
 	}(c)
