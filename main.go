@@ -85,18 +85,18 @@ type storage struct {
 }
 
 func (storage) timeout() time.Time {
-	return time.Now().Add(time.Second * -4)
+	return time.Now().Add(time.Second * -60)
 }
 
 func (s *storage) pop(addr string) *stun.Message {
 	s.Lock()
+	defer s.Unlock()
 	if s.data[addr] == nil {
 		return nil
 	}
 	m := s.data[addr].Clone()
 	stun.ReleaseMessage(s.data[addr].Message)
 	delete(s.data, addr)
-	s.Unlock()
 	return m
 }
 
