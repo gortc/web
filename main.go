@@ -186,7 +186,7 @@ func main() {
 			return
 		}
 		for k, v := range s {
-			fmt.Fprintf(w, "<p>%02d %s</p>\n", k, v)
+			fmt.Fprintf(w, `<p class="attribute">%02d %s</p>` + "\n", k, v)
 			if v.Type != sdp.TypeAttribute {
 				continue
 			}

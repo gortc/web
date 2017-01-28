@@ -21,11 +21,18 @@ code {
 }
 
 .stun-message {
-    padding: 3px;
+    padding: 3px 3px 3px 15px;
+    color: black;
 }
 
-#response.p {
-    margin: 0;
+.stun-message p {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.attribute {
+    margin: 1px;
+    color: #888;
 }
 
 #description {
