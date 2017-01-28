@@ -223,8 +223,15 @@ func main() {
 					fmt.Fprintf(w, "<p>STUN attribute %s: %v (len=%d)</p>", a.Type, a.Value, a.Length)
 				}
 			}
-			fmt.Fprintln(w, `<p>dumped: <code>stun-decode`, base64.StdEncoding.EncodeToString(m.Bytes()), `</code></p>`)
-			fmt.Fprintln(w, `<p>crc64: <code>`, crc64.Checksum(m.Bytes(), crc64.MakeTable(crc64.ISO)), `</code></p>`)
+			var (
+				b64          = base64.StdEncoding.EncodeToString(m.Bytes())
+				messageCRC64 = crc64.Checksum(m.Bytes(), crc64.MakeTable(crc64.ISO))
+				clipID       = fmt.Sprintf("crc64-%d", messageCRC64)
+			)
+			fmt.Fprintln(w, `<p>dumped: <code id="`+clipID+`">stun-decode`, b64, `</code>
+				<button class="btn" data-clipboard-target="#`+clipID+`">copy</button>
+			</p>`)
+			fmt.Fprintln(w, `<p>crc64: <code>`, messageCRC64, `</code></p>`)
 			fmt.Fprintln(w, `</div>`)
 		}
 	})
