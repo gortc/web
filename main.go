@@ -141,6 +141,7 @@ func (s *storage) collectCycle() {
 
 func main() {
 	flag.Parse()
+	log.SetFlags(log.Lshortfile)
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
 	http.HandleFunc("/ice-configuration", func(w http.ResponseWriter, r *http.Request) {
