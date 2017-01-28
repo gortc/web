@@ -1,0 +1,143 @@
+
+body {
+    font-family: "Go", Arial, sans-serif;
+}
+
+a:hover, .exampleHeading .text:hover {
+    text-decoration: underline;
+}
+a, .exampleHeading .text {
+    color: #375EAB;
+    text-decoration: none;
+}
+
+code {
+    font-family: "Go Mono", monospace;
+    background: #F3F3F3;
+    border-radius: 3px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 1px;
+}
+
+.stun-message {
+    padding: 3px;
+}
+
+#response.p {
+    margin: 0;
+}
+
+#description {
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+.container {
+    max-width: 728px;
+}
+.container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+#description, #response {
+    padding-left: 10px;
+}
+
+.error {
+    color: #ff1a35;
+    background-color: aliceblue;
+    border-radius: 1px;
+}
+
+.warning {
+    color: #9d8f15;
+    background-color: aliceblue;
+    border-radius: 1px;
+}
+
+.success {
+    color: #2e9d4e;
+    background-color: aliceblue;
+    border-radius: 1px;
+}
+
+h1, h2, h3, h4 {
+    margin: 20px 0 20px;
+    padding: 0;
+    color: #375EAB;
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'Go';
+    src: url('../fonts/GoMedium-Italic.woff') format('woff');
+    font-weight: 500;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Go';
+    src: url('../fonts/Go-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Go';
+    src: url('../fonts/Go-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Go';
+    src: url('../fonts/GoMedium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Go';
+    src: url('../fonts/Go-BoldItalic.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Go';
+    src: url('../fonts/GoRegular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Go Mono';
+    src: url('../fonts/GoMono-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Go Mono';
+    src: url('../fonts/GoMono.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Go Mono';
+    src: url('../fonts/GoMono-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Go Mono';
+    src: url('../fonts/GoMono-BoldItalic.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+}
