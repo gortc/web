@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"hash/crc64"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,9 +20,6 @@ import (
 	"github.com/ernado/sdp"
 	"github.com/ernado/stun"
 	"github.com/pkg/errors"
-	"hash/crc64"
-	"net/url"
-	"strings"
 )
 
 var (
@@ -186,7 +186,7 @@ func main() {
 			return
 		}
 		for k, v := range s {
-			fmt.Fprintf(w, `<p class="attribute">%02d %s</p>` + "\n", k, v)
+			fmt.Fprintf(w, `<p class="attribute">%02d %s</p>`+"\n", k, v)
 			if v.Type != sdp.TypeAttribute {
 				continue
 			}
