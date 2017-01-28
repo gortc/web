@@ -10,20 +10,20 @@
     <h1>SDP example via WebRTC</h1>
     <a href="/" class="link-back">back to list </a>
     <div id="description">
-        <p>Use <code>go install github.com/ernado/stun/stun-decode</code> to decode raw STUN messages.</p>
         <p>
             On start, ice&#8209;client (your browser) fetches ice&#8209;configuration from server <a href="http://github.com/cydev/web">cydev/web</a>
             (which handles both STUN with <a href="http://github.com/ernado/stun">ernado/stun</a> and HTTP),
             creates new RTCPeerConnection and gathers ice&#8209;candidates via binding requests from server.
-            Server saves received packet as <code>stun.Message</code> before responding with binging response.
+            Server saves received packet as <code>stun.Message</code> before responding with binding response.
             Then ice&#8209;client creates ice&#8209;offer and sends it to web server.
             Ser responds with HTML that is appended to this page,
             parsing ice&#8209;offer as <code>stun.Session</code> and every ice&#8209;candidate <code>ice.Candidate</code> with
             <a href="http://github.com/ernado/ice">ernado/ice</a>. For server&#8209;reflexive candidates server dumps
             saved <code>stun.Message</code>.
         </p>
+        <p>Use <code>go install github.com/ernado/stun/stun-decode</code> to decode raw STUN messages.</p>
         <p>
-            <code>// TODO(ar): visualise</code>
+            <code>// TODO(ar): visualise client-server interaction</code>
         </p>
     </div>
 </div>
