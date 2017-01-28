@@ -1,0 +1,8 @@
+stun-msg-fuzz.zip
+stun-typ-fuzz.zip
+.idea
+mem.out
+benchmark.*.write
+*.test
+bench.go-*
+PACKAGES
