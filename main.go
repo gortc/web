@@ -24,6 +24,7 @@ import (
 	"github.com/ernado/ice"
 	"github.com/ernado/sdp"
 	"github.com/ernado/stun"
+	"github.com/ernado/turn"
 )
 
 var (
@@ -51,8 +52,27 @@ func processUDPPacket(addr net.Addr, b []byte, req, res *stun.Message) error {
 		log.Println("packet from", addr, "is not STUN message")
 		return nil
 	}
-	if _, err := req.ReadBytes(b); err != nil {
+	if _, err := req.Write(b); err != nil {
 		return errors.Wrap(err, "failed to read message")
+	}
+	if req.Type.Method == stun.MethodAllocate {
+		log.Println("got allocate request")
+		fmt.Println(req.Attributes)
+		var t turn.RequestedTransport
+		t.GetFrom(req)
+		fmt.Println(req, "trsnp")
+		fmt.Println(base64.StdEncoding.EncodeToString(req.Raw))
+
+		if _, err := req.Get(stun.AttrMessageIntegrity); err != nil {
+			res.TransactionID = req.TransactionID
+			res.Type = stun.MessageType{
+				Class:  stun.ClassErrorResponse,
+				Method: stun.MethodAllocate,
+			}
+			stun.CodeUnauthorised.AddTo(res)
+			res.WriteHeader()
+			return nil
+		}
 	}
 	if req.Type != bindingRequest {
 		log.Println("stun: skipping", req.Type, "from", addr)
@@ -72,15 +92,20 @@ func processUDPPacket(addr net.Addr, b []byte, req, res *stun.Message) error {
 	default:
 		panic(fmt.Sprintf("unknown addr: %v", addr))
 	}
-	res.AddXORMappedAddress(ip, port)
-	res.AddSoftware("cydev.ru/sdp/ example")
+	a := stun.XORMappedAddress{
+		IP:   ip,
+		Port: port,
+	}
+	a.AddTo(res)
 	res.WriteHeader()
 	messages.add(fmt.Sprintf("%s:%d", ip, port), req)
 	return nil
 }
 
 type iceServerConfiguration struct {
-	URLs []string `json:"urls"`
+	URLs       []string `json:"urls"`
+	Credential string   `json:"credential"`
+	Username   string   `json:"username"`
 }
 
 type iceConfiguration struct {
@@ -111,15 +136,16 @@ func (s *storage) pop(addr string) *stun.Message {
 	if s.data[addr] == nil {
 		return nil
 	}
-	m := s.data[addr].Clone()
-	stun.ReleaseMessage(s.data[addr].Message)
+	m := s.data[addr].Message
 	delete(s.data, addr)
 	return m
 }
 
 func (s *storage) add(addr string, m *stun.Message) {
+	n := new(stun.Message)
+	n.Write(m.Raw)
 	entry := &storageEntry{
-		Message:   m.Clone(),
+		Message:   n,
 		createdAt: time.Now(),
 	}
 	s.Lock()
@@ -140,7 +166,6 @@ func (s *storage) collect() {
 		}
 	}
 	for _, addr := range toRemove {
-		stun.ReleaseMessage(s.data[addr].Message)
 		delete(s.data, addr)
 	}
 	s.Unlock()
@@ -165,7 +190,7 @@ func main() {
 		w.Header().Add("Content-type", "application/json")
 		encoder := json.NewEncoder(w)
 		origin := r.Header.Get("Origin")
-		server := "stun:a1.cydev.ru"
+		server := "turn:a1.cydev.ru"
 		if len(origin) > 0 {
 			u, err := url.Parse(origin)
 			if err != nil {
@@ -174,13 +199,20 @@ func main() {
 				if idx := strings.LastIndex(u.Host, ":"); idx > 0 {
 					u.Host = u.Host[:idx]
 				}
-				server = fmt.Sprintf("stun:%s:%d", u.Host, *portSTUN)
+				server = fmt.Sprintf("turn:%s:%d", u.Host, *portSTUN)
 				log.Printf("http: sending ice-server %q for origin %q", server, origin)
 			}
 		}
 		if err := encoder.Encode(iceConfiguration{
 			Servers: []iceServerConfiguration{
-				{URLs: []string{server}},
+				{
+					URLs: []string{server},
+					//URLs: []string{
+					//	"turn:a1.cydev.ru",
+					//},
+					Credential: "turn",
+					Username:   "ernado",
+				},
 			},
 		}); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -224,7 +256,7 @@ func main() {
 			}
 			c := new(ice.Candidate)
 			fmt.Fprintln(w, `<div class="stun-message">`)
-			if err = ice.ParseAttribute(v.Value, c); err != nil {
+			if err = ice.ParseCandidate(v.Value, c); err != nil {
 				fmt.Fprintln(w, `<p class="error">failed to parse as candidate:`, err, "</p>")
 				fmt.Fprintln(w, `</div>`)
 				continue
@@ -252,8 +284,8 @@ func main() {
 				}
 			}
 			var (
-				b64             = base64.StdEncoding.EncodeToString(m.Bytes())
-				messageCRC64    = crc64.Checksum(m.Bytes(), crc64.MakeTable(crc64.ISO))
+				b64             = base64.StdEncoding.EncodeToString(m.Raw)
+				messageCRC64    = crc64.Checksum(m.Raw, crc64.MakeTable(crc64.ISO))
 				clipID          = fmt.Sprintf("crc64-%d", messageCRC64)
 				ua              = user_agent.New(r.Header.Get("User-agent"))
 				bName, bVersion = ua.Browser()
@@ -295,8 +327,8 @@ func main() {
 	go func(conn net.PacketConn) {
 		log.Println("Started STUN server on", conn.LocalAddr())
 		var (
-			res = stun.AcquireMessage()
-			req = stun.AcquireMessage()
+			res = new(stun.Message)
+			req = new(stun.Message)
 			buf = make([]byte, stun.MaxPacketSize)
 		)
 		for {
@@ -311,7 +343,7 @@ func main() {
 				log.Println("failed to process UDP packet:", err, "from addr", addr)
 			} else {
 				log.Printf("stun: parsed message %q from %s", req, addr)
-				if _, err = c.WriteTo(res.Bytes(), addr); err != nil {
+				if _, err = c.WriteTo(res.Raw, addr); err != nil {
 					log.Println("failed to send packet:", err)
 				}
 			}
