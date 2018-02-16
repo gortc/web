@@ -19,11 +19,10 @@ import (
 	"time"
 
 	"github.com/mssola/user_agent"
-	"github.com/pkg/errors"
 
 	"github.com/ernado/ice"
-	"github.com/ernado/sdp"
-	"github.com/ernado/stun"
+	"github.com/gortc/sdp"
+	"github.com/gortc/stun"
 )
 
 var (
@@ -51,8 +50,9 @@ func processUDPPacket(addr net.Addr, b []byte, req, res *stun.Message) error {
 		log.Println("packet from", addr, "is not STUN message")
 		return nil
 	}
-	if _, err := req.ReadBytes(b); err != nil {
-		return errors.Wrap(err, "failed to read message")
+	req.Raw = b
+	if err := req.Decode(); err != nil {
+		return err
 	}
 	if req.Type != bindingRequest {
 		log.Println("stun: skipping", req.Type, "from", addr)
@@ -72,8 +72,11 @@ func processUDPPacket(addr net.Addr, b []byte, req, res *stun.Message) error {
 	default:
 		panic(fmt.Sprintf("unknown addr: %v", addr))
 	}
-	res.AddXORMappedAddress(ip, port)
-	res.AddSoftware("cydev.ru/sdp/ example")
+	stun.XORMappedAddress{
+		IP: ip,
+		Port: port,
+	}.AddTo(res)
+	stun.NewSoftware("cydev.ru/sdp example").AddTo(res)
 	res.WriteHeader()
 	messages.add(fmt.Sprintf("%s:%d", ip, port), req)
 	return nil
@@ -105,21 +108,30 @@ func (storage) timeout() time.Time {
 	return time.Now().Add(time.Second * -60)
 }
 
+func mustClone(m *stun.Message) *stun.Message {
+	b := new(stun.Message)
+	if err := m.CloneTo(b); err != nil {
+		panic(err)
+	}
+	return b
+}
+
 func (s *storage) pop(addr string) *stun.Message {
 	s.Lock()
 	defer s.Unlock()
 	if s.data[addr] == nil {
 		return nil
 	}
-	m := s.data[addr].Clone()
-	stun.ReleaseMessage(s.data[addr].Message)
+	m := mustClone(s.data[addr].Message)
 	delete(s.data, addr)
 	return m
 }
 
 func (s *storage) add(addr string, m *stun.Message) {
+	c := new(stun.Message)
+	m.CloneTo(c)
 	entry := &storageEntry{
-		Message:   m.Clone(),
+		Message:   c,
 		createdAt: time.Now(),
 	}
 	s.Lock()
@@ -140,7 +152,6 @@ func (s *storage) collect() {
 		}
 	}
 	for _, addr := range toRemove {
-		stun.ReleaseMessage(s.data[addr].Message)
 		delete(s.data, addr)
 	}
 	s.Unlock()
@@ -252,8 +263,8 @@ func main() {
 				}
 			}
 			var (
-				b64             = base64.StdEncoding.EncodeToString(m.Bytes())
-				messageCRC64    = crc64.Checksum(m.Bytes(), crc64.MakeTable(crc64.ISO))
+				b64             = base64.StdEncoding.EncodeToString(m.Raw)
+				messageCRC64    = crc64.Checksum(m.Raw, crc64.MakeTable(crc64.ISO))
 				clipID          = fmt.Sprintf("crc64-%d", messageCRC64)
 				ua              = user_agent.New(r.Header.Get("User-agent"))
 				bName, bVersion = ua.Browser()
@@ -295,9 +306,9 @@ func main() {
 	go func(conn net.PacketConn) {
 		log.Println("Started STUN server on", conn.LocalAddr())
 		var (
-			res = stun.AcquireMessage()
-			req = stun.AcquireMessage()
-			buf = make([]byte, stun.MaxPacketSize)
+			res = new(stun.Message)
+			req = new(stun.Message)
+			buf = make([]byte, 1024)
 		)
 		for {
 			// ReadFrom c to buf
@@ -311,7 +322,7 @@ func main() {
 				log.Println("failed to process UDP packet:", err, "from addr", addr)
 			} else {
 				log.Printf("stun: parsed message %q from %s", req, addr)
-				if _, err = c.WriteTo(res.Bytes(), addr); err != nil {
+				if _, err = c.WriteTo(res.Raw, addr); err != nil {
 					log.Println("failed to send packet:", err)
 				}
 			}

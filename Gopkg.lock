@@ -8,16 +8,16 @@
   revision = "ec734f8315c8080b49bc6d5e65b65c052b2bd7c6"
 
 [[projects]]
-  name = "github.com/ernado/sdp"
+  name = "github.com/gortc/sdp"
   packages = ["."]
   revision = "6633fbed98987899147f40111a887f71e9ba7faa"
   version = "v0.9.1"
 
 [[projects]]
-  name = "github.com/ernado/stun"
+  name = "github.com/gortc/stun"
   packages = ["."]
-  revision = "e2a1cfa762352bc9317cdf578d602f759dd00bda"
-  version = "v1.6"
+  revision = "dca36b59733d9246b038f2546647f031d11fecf6"
+  version = "v1.6.1"
 
 [[projects]]
   name = "github.com/klauspost/compress"
@@ -58,6 +58,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "98b807d9b4cc27c55c912040baca676a96bf6e10cb845c9900766f771e1eff62"
+  inputs-digest = "d184c0e056d3309c64ab2cd1a1554ef010c7d8e53fe329825704c30688caac11"
   solver-name = "gps-cdcl"
   solver-version = 1
