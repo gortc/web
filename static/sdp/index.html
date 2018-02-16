@@ -12,15 +12,15 @@
     <div id="description">
         <p>
             On start, ice&#8209;client (your browser) fetches ice&#8209;configuration from server <a target="_blank"
-                                                                                                     href="http://github.com/cydev/web">cydev/web</a>
-            (which handles both STUN with <a target="_blank" href="http://github.com/ernado/stun">ernado/stun</a> and
+                                                                                                     href="https://github.com/cydev/web">cydev/web</a>
+            (which handles both STUN with <a target="_blank" href="https://github.com/gortc/stun">gortc/stun</a> and
             HTTP),
             creates new RTCPeerConnection and gathers ice&#8209;candidates via binding requests to server.
             Server saves received packet as <code>stun.Message</code> before responding with binding response.
             Then ice&#8209;client creates ice&#8209;offer and sends it to web server.
             Server parses ice&#8209;offer as <code>stun.Session</code> and every ice&#8209;candidate in it
             as <code>ice.Candidate</code> with
-            <a target="_blank" href="http://github.com/ernado/ice">ernado/ice</a>. For server&#8209;reflexive candidates
+            <a target="_blank" href="https://github.com/ernado/ice">ernado/ice</a>. For server&#8209;reflexive candidates
             server dumps
             saved <code>stun.Message</code>.
         </p>
