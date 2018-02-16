@@ -2,24 +2,31 @@ package stun
 
 import "testing"
 
-func TestDecodeErr(t *testing.T) {
-	err := newDecodeErr("parent", "children", "message")
-	if !err.IsPlace(DecodeErrPlace{Parent: "parent", Children: "children"}) {
-		t.Error("isPlace test failed")
+func TestDecodeErr_IsInvalidCookie(t *testing.T) {
+	m := new(Message)
+	m.WriteHeader()
+	decoded := new(Message)
+	m.Raw[4] = 55
+	_, err := decoded.Write(m.Raw)
+	if err == nil {
+		t.Fatal("should error")
 	}
-	if !err.IsPlaceParent("parent") {
-		t.Error("parent test failed")
+	expected := "BadFormat for message/cookie: " +
+		"3712a442 is invalid magic cookie (should be 2112a442)"
+	if err.Error() != expected {
+		t.Error(err, "!=", expected)
 	}
-	if !err.IsPlaceChildren("children") {
-		t.Error("children test failed")
+	dErr, ok := err.(*DecodeErr)
+	if !ok {
+		t.Error("not decode error")
 	}
-	if err.Error() != "BadFormat for parent/children: message" {
-		t.Error("bad Error string")
+	if !dErr.IsInvalidCookie() {
+		t.Error("IsInvalidCookie = false, should be true")
 	}
-}
-
-func TestError_Error(t *testing.T) {
-	if Error("error").Error() != "error" {
-		t.Error("bad Error string")
+	if !dErr.IsPlaceChildren("cookie") {
+		t.Error("bad children")
+	}
+	if !dErr.IsPlaceParent("message") {
+		t.Error("bad parent")
 	}
 }

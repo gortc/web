@@ -9,132 +9,7 @@ import (
 	"mime/multipart"
 	"strings"
 	"testing"
-	"time"
 )
-
-func TestResponseWriteGzipNilBody(t *testing.T) {
-	var r Response
-	w := &bytes.Buffer{}
-	bw := bufio.NewWriter(w)
-	if err := r.WriteGzip(bw); err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if err := bw.Flush(); err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-}
-
-func TestResponseWriteDeflateNilBody(t *testing.T) {
-	var r Response
-	w := &bytes.Buffer{}
-	bw := bufio.NewWriter(w)
-	if err := r.WriteDeflate(bw); err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if err := bw.Flush(); err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-}
-
-func TestResponseSwapBodySerial(t *testing.T) {
-	testResponseSwapBody(t)
-}
-
-func TestResponseSwapBodyConcurrent(t *testing.T) {
-	ch := make(chan struct{})
-	for i := 0; i < 10; i++ {
-		go func() {
-			testResponseSwapBody(t)
-			ch <- struct{}{}
-		}()
-	}
-
-	for i := 0; i < 10; i++ {
-		select {
-		case <-ch:
-		case <-time.After(time.Second):
-			t.Fatalf("timeout")
-		}
-	}
-}
-
-func testResponseSwapBody(t *testing.T) {
-	var b []byte
-	r := AcquireResponse()
-	for i := 0; i < 20; i++ {
-		bOrig := r.Body()
-		b = r.SwapBody(b)
-		if !bytes.Equal(bOrig, b) {
-			t.Fatalf("unexpected body returned: %q. Expecting %q", b, bOrig)
-		}
-		r.AppendBodyString("foobar")
-	}
-
-	s := "aaaabbbbcccc"
-	b = b[:0]
-	for i := 0; i < 10; i++ {
-		r.SetBodyStream(bytes.NewBufferString(s), len(s))
-		b = r.SwapBody(b)
-		if string(b) != s {
-			t.Fatalf("unexpected body returned: %q. Expecting %q", b, s)
-		}
-		b = r.SwapBody(b)
-		if len(b) > 0 {
-			t.Fatalf("unexpected body with non-zero size returned: %q", b)
-		}
-	}
-	ReleaseResponse(r)
-}
-
-func TestRequestSwapBodySerial(t *testing.T) {
-	testRequestSwapBody(t)
-}
-
-func TestRequestSwapBodyConcurrent(t *testing.T) {
-	ch := make(chan struct{})
-	for i := 0; i < 10; i++ {
-		go func() {
-			testRequestSwapBody(t)
-			ch <- struct{}{}
-		}()
-	}
-
-	for i := 0; i < 10; i++ {
-		select {
-		case <-ch:
-		case <-time.After(time.Second):
-			t.Fatalf("timeout")
-		}
-	}
-}
-
-func testRequestSwapBody(t *testing.T) {
-	var b []byte
-	r := AcquireRequest()
-	for i := 0; i < 20; i++ {
-		bOrig := r.Body()
-		b = r.SwapBody(b)
-		if !bytes.Equal(bOrig, b) {
-			t.Fatalf("unexpected body returned: %q. Expecting %q", b, bOrig)
-		}
-		r.AppendBodyString("foobar")
-	}
-
-	s := "aaaabbbbcccc"
-	b = b[:0]
-	for i := 0; i < 10; i++ {
-		r.SetBodyStream(bytes.NewBufferString(s), len(s))
-		b = r.SwapBody(b)
-		if string(b) != s {
-			t.Fatalf("unexpected body returned: %q. Expecting %q", b, s)
-		}
-		b = r.SwapBody(b)
-		if len(b) > 0 {
-			t.Fatalf("unexpected body with non-zero size returned: %q", b)
-		}
-	}
-	ReleaseRequest(r)
-}
 
 func TestRequestHostFromRequestURI(t *testing.T) {
 	hExpected := "foobar.com"
@@ -700,10 +575,8 @@ func TestResponseGzipStream(t *testing.T) {
 	r.SetBodyStreamWriter(func(w *bufio.Writer) {
 		fmt.Fprintf(w, "foo")
 		w.Flush()
-		time.Sleep(time.Millisecond)
 		w.Write([]byte("barbaz"))
 		w.Flush()
-		time.Sleep(time.Millisecond)
 		fmt.Fprintf(w, "1234")
 		if err := w.Flush(); err != nil {
 			t.Fatalf("unexpected error: %s", err)
@@ -1502,28 +1375,6 @@ func TestReadBodyChunked(t *testing.T) {
 
 	// smaler body after big one
 	testReadBodyChunked(t, b, 12343)
-}
-
-func TestRequestURITLS(t *testing.T) {
-	uriNoScheme := "//foobar.com/baz/aa?bb=dd&dd#sdf"
-	requestURI := "http:" + uriNoScheme
-	requestURITLS := "https:" + uriNoScheme
-
-	var req Request
-
-	req.isTLS = true
-	req.SetRequestURI(requestURI)
-	uri := req.URI().String()
-	if uri != requestURITLS {
-		t.Fatalf("unexpected request uri: %q. Expecting %q", uri, requestURITLS)
-	}
-
-	req.Reset()
-	req.SetRequestURI(requestURI)
-	uri = req.URI().String()
-	if uri != requestURI {
-		t.Fatalf("unexpected request uri: %q. Expecting %q", uri, requestURI)
-	}
 }
 
 func TestRequestURI(t *testing.T) {

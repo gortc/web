@@ -1,34 +1,24 @@
 package stun
 
 import (
-	"encoding/binary"
+	"errors"
 	"fmt"
-	"net"
-	"strconv"
-
-	"github.com/pkg/errors"
 )
 
-// blank is just blank string and exists just because it is ugly to keep it
-// in code.
-const blank = ""
-
 // Attributes is list of message attributes.
-type Attributes []Attribute
+type Attributes []RawAttribute
 
-// BlankAttribute is attribute that is returned by
-// Attributes.Get if nothing found.
-var BlankAttribute = Attribute{}
-
-// Get returns first attribute from list which match AttrType. If nothing
-// found, it returns blank attribute.
-func (a Attributes) Get(t AttrType) Attribute {
+// Get returns first attribute from list by the type.
+// If attribute is present the RawAttribute is returned and the
+// boolean is true. Otherwise the returned RawAttribute will be
+// empty and boolean will be false.
+func (a Attributes) Get(t AttrType) (RawAttribute, bool) {
 	for _, candidate := range a {
 		if candidate.Type == t {
-			return candidate
+			return candidate, true
 		}
 	}
-	return BlankAttribute
+	return RawAttribute{}, false
 }
 
 // AttrType is attribute type.
@@ -115,32 +105,27 @@ var attrNames = map[AttrType]string{
 func (t AttrType) String() string {
 	s, ok := attrNames[t]
 	if !ok {
-		// just return hex representation of unknown attribute type
-		return "0x" + strconv.FormatUint(uint64(t), 16)
+		// Just return hex representation of unknown attribute type.
+		return fmt.Sprintf("0x%x", uint16(t))
 	}
 	return s
 }
 
-// Attribute is a Type-Length-Value (TLV) object that
-// can be added to a STUN message.  Attributes are divided into two
+// RawAttribute is a Type-Length-Value (TLV) object that
+// can be added to a STUN message. Attributes are divided into two
 // types: comprehension-required and comprehension-optional.  STUN
 // agents can safely ignore comprehension-optional attributes they
 // don't understand, but cannot successfully process a message if it
 // contains comprehension-required attributes that are not
 // understood.
-type Attribute struct {
+type RawAttribute struct {
 	Type   AttrType
-	Length uint16
+	Length uint16 // ignored while encoding
 	Value  []byte
 }
 
-// IsBlank returns true if attribute equals to BlankAttribute.
-func (a Attribute) IsBlank() bool {
-	return a.Equal(BlankAttribute)
-}
-
 // Equal returns true if a == b.
-func (a Attribute) Equal(b Attribute) bool {
+func (a RawAttribute) Equal(b RawAttribute) bool {
 	if a.Type != b.Type {
 		return false
 	}
@@ -158,162 +143,65 @@ func (a Attribute) Equal(b Attribute) bool {
 	return true
 }
 
-func (a Attribute) String() string {
-	return fmt.Sprintf("%s: %x", a.Type, a.Value)
+func (a RawAttribute) String() string {
+	return fmt.Sprintf("%s: 0x%x", a.Type, a.Value)
 }
 
-// getAttrValue returns byte slice that represents attribute value,
-// and if there is no value found, error returned.
-func (m *Message) getAttrValue(t AttrType) ([]byte, error) {
-	v := m.Attributes.Get(t).Value
-	if len(v) == 0 {
-		return nil, errors.Wrap(ErrAttributeNotFound, "failed to find")
+// ErrAttributeNotFound means that attribute with provided attribute
+// type does not exist in message.
+var ErrAttributeNotFound = errors.New("attribute not found")
+
+// Get returns byte slice that represents attribute value,
+// if there is no attribute with such type,
+// ErrAttributeNotFound is returned.
+func (m *Message) Get(t AttrType) ([]byte, error) {
+	v, ok := m.Attributes.Get(t)
+	if !ok {
+		return nil, ErrAttributeNotFound
 	}
-	return v, nil
+	return v.Value, nil
 }
 
-// AddSoftwareBytes adds SOFTWARE attribute with value from byte slice.
-func (m *Message) AddSoftwareBytes(software []byte) {
-	m.Add(AttrSoftware, software)
+// AttrOverflowErr occurs when len(v) > Max.
+type AttrOverflowErr struct {
+	Type AttrType
+	Max  int
+	Got  int
 }
 
-// AddSoftware adds SOFTWARE attribute with value from string.
-func (m *Message) AddSoftware(software string) {
-	m.Add(AttrSoftware, []byte(software))
+func (e AttrOverflowErr) Error() string {
+	return fmt.Sprintf("incorrect length of %s attribute: %d exceeds maximum %d",
+		e.Type, e.Got, e.Max,
+	)
 }
 
-// GetSoftwareBytes returns SOFTWARE attribute value in byte slice.
-// If not found, returns nil.
-func (m *Message) GetSoftwareBytes() []byte {
-	return m.Attributes.Get(AttrSoftware).Value
+// AttrLengthErr means that length for attribute is invalid.
+type AttrLengthErr struct {
+	Attr     AttrType
+	Got      int
+	Expected int
 }
 
-// GetSoftware returns SOFTWARE attribute value in string.
-// If not found, returns blank string.
-func (m *Message) GetSoftware() string {
-	v := m.GetSoftwareBytes()
-	if len(v) == 0 {
-		return blank
-	}
-	return string(v)
+func (e AttrLengthErr) Error() string {
+	return fmt.Sprintf("incorrect length of %s attribute: got %d, expected %d",
+		e.Attr,
+		e.Got,
+		e.Expected,
+	)
 }
 
-// Address family values.
-const (
-	FamilyIPv4 byte = 0x01
-	FamilyIPv6 byte = 0x02
-)
-
-// AddXORMappedAddress adds XOR MAPPED ADDRESS attribute to message.
-func (m *Message) AddXORMappedAddress(ip net.IP, port int) {
-	// X-Port is computed by taking the mapped port in host byte order,
-	// XOR’ing it with the most significant 16 bits of the magic cookie, and
-	// then the converting the result to network byte order.
-	family := FamilyIPv6
-	if ipV4 := ip.To4(); ipV4 != nil {
-		ip = ipV4
-		family = FamilyIPv4
-	}
-	value := make([]byte, 32+128)
-	value[0] = 0 // first 8 bits are zeroes
-	xorValue := make([]byte, net.IPv6len)
-	copy(xorValue[4:], m.TransactionID[:])
-	binary.BigEndian.PutUint32(xorValue[0:4], magicCookie)
-	port ^= magicCookie >> 16
-	binary.BigEndian.PutUint16(value[0:2], uint16(family))
-	binary.BigEndian.PutUint16(value[2:4], uint16(port))
-	xorBytes(value[4:4+len(ip)], ip, xorValue)
-	m.Add(AttrXORMappedAddress, value[:4+len(ip)])
-}
-
-func (m *Message) allocBuffer(size int) []byte {
-	capacity := len(m.buf.B) + size
-	m.grow(capacity)
-	m.buf.B = m.buf.B[:capacity]
-	return m.buf.B[len(m.buf.B)-size:]
-}
-
-// GetXORMappedAddress returns ip, port from attribute and error if any.
-// Value for ip is valid until Message is released or underlying buffer is
-// corrupted.
-func (m *Message) GetXORMappedAddress() (net.IP, int, error) {
-	// X-Port is computed by taking the mapped port in host byte order,
-	// XOR’ing it with the most significant 16 bits of the magic cookie, and
-	// then the converting the result to network byte order.
-	v, err := m.getAttrValue(AttrXORMappedAddress)
-	if len(v) == 0 {
-		return nil, 0, errors.Wrap(err, "address not found")
-	}
-	family := byte(binary.BigEndian.Uint16(v[0:2]))
-	if family != FamilyIPv6 && family != FamilyIPv4 {
-		err := errors.Wrapf(ErrAttributeDecodeError, "bad family %d", family)
-		return nil, 0, err
-	}
-	ipLen := net.IPv4len
-	if family == FamilyIPv6 {
-		ipLen = net.IPv6len
-	}
-	ip := net.IP(m.allocBuffer(ipLen))
-	port := int(binary.BigEndian.Uint16(v[2:4])) ^ (magicCookie >> 16)
-	xorValue := make([]byte, 128)
-	binary.BigEndian.PutUint32(xorValue[0:4], magicCookie)
-	copy(xorValue[4:], m.TransactionID[:])
-	xorBytes(ip, v[4:], xorValue)
-	return ip, port, nil
-}
-
-// constants for ERROR-CODE encoding.
-const (
-	errorCodeReasonStart = 4
-	errorCodeClassByte   = 2
-	errorCodeNumberByte  = 3
-	errorCodeReasonMaxB  = 763
-	errorCodeModulo      = 100
-)
-
-// AddErrorCode adds ERROR-CODE attribute to message.
+// STUN aligns attributes on 32-bit boundaries, attributes whose content
+// is not a multiple of 4 bytes are padded with 1, 2, or 3 bytes of
+// padding so that its value contains a multiple of 4 bytes.  The
+// padding bits are ignored, and may be any value.
 //
-// The reason phrase MUST be a UTF-8 [RFC 3629] encoded
-// sequence of less than 128 characters (which can be as long as 763
-// bytes).
-func (m *Message) AddErrorCode(code int, reason string) {
-	value := make([]byte,
-		errorCodeReasonStart, errorCodeReasonMaxB+errorCodeReasonStart,
-	)
-	number := byte(code % errorCodeModulo) // error code modulo 100
-	class := byte(code / errorCodeModulo)  // hundred digit
-	value[errorCodeClassByte] = class
-	value[errorCodeNumberByte] = number
-	value = append(value, reason...)
-	m.Add(AttrErrorCode, value)
-}
+// https://tools.ietf.org/html/rfc5389#section-15
+const padding = 4
 
-// AddErrorCodeDefault is wrapper for AddErrorCode that uses recommended
-// reason string from RFC. If error code is unknown, reason will be "Unknown
-// Error".
-func (m *Message) AddErrorCodeDefault(code int) {
-	m.AddErrorCode(code, ErrorCode(code).Reason())
-}
-
-// GetErrorCode returns ERROR-CODE code, reason and decode error if any.
-func (m *Message) GetErrorCode() (int, []byte, error) {
-	v, err := m.getAttrValue(AttrErrorCode)
-	if err != nil {
-		return 0, nil, errors.Wrap(err, "error not found")
+func nearestPaddedValueLength(l int) int {
+	n := padding * (l / padding)
+	if n < l {
+		n += padding
 	}
-	var (
-		class  = uint16(v[errorCodeClassByte])
-		number = uint16(v[errorCodeNumberByte])
-		code   = int(class*errorCodeModulo + number)
-		reason = v[errorCodeReasonStart:]
-	)
-	return code, reason, nil
+	return n
 }
-
-var (
-	// ErrAttributeNotFound means that there is no such attribute.
-	ErrAttributeNotFound Error = "Attribute not found"
-
-	// ErrAttributeDecodeError means that agent is unable to decode value.
-	ErrAttributeDecodeError Error = "Attribute decode error"
-)
