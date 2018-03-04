@@ -13,21 +13,40 @@
   roles:
     - gortc.go
     - geerlingguy.nginx
+  vars:
+    nginx_vhosts:
+      - listen: "80"
+        server_name: "gortc.io"
+        state: "present"
+        file: "web.conf"
+        template: "{{ nginx_vhost_template }}"
+        extra_parameters: |
+          location / {
+            proxy_pass http://localhost:3000;
+          }
   tasks:
     - name: install web
+      notify: restart web
+      become: true
+      become_user: web
       git:
         repo: https://github.com/cydev/web.git
-        dest: /home/web/root
-      become: web
-      become_user: web
+        dest: /home/web/go/src/github.com/cydev/web
     - name: build
-      make:
-        chdir: /home/web/root
-        target: build-prod
-      become: web
+      become: true
       become_user: web
+      make:
+        chdir: /home/web/go/src/github.com/cydev/web
+        target: build-prod
     - name: install systemd service file
       template: src=web.service.j2 dest=/etc/systemd/system/web.service
+      notify: restart web
+    - name: ensure that service is enabled and started
+      systemd:
+        name: web
+        state: started
+        enabled: yes
+        daemon_reload: yes
   pre_tasks:
     - name: update apt cache if needed
       apt: update_cache=yes cache_valid_time=3600
@@ -42,3 +61,6 @@
 
     - name: remove require tty
       lineinfile: regexp="^\s+\w+\s+requiretty" dest=/etc/sudoers state=absent
+  handlers:
+    - name: restart web
+      service: name=web state=restarted

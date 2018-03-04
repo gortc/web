@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 
-WorkingDirectory=/home/web/root
-ExecStart=/home/web/root/cydev-web
+WorkingDirectory=/home/web/go/src/github.com/cydev/web
+ExecStart=/home/web/go/src/github.com/cydev/web/cydev-web
 Restart=on-failure
 Type=simple
 User=web
