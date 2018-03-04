@@ -15,7 +15,7 @@
     - geerlingguy.nginx
   vars:
     nginx_vhosts:
-      - listen: "80"
+      - listen: "443 ssl http2"
         server_name: "gortc.io"
         state: "present"
         file: "web.conf"
@@ -24,6 +24,9 @@
           location / {
             proxy_pass http://localhost:3000;
           }
+          ssl_certificate     /home/web/ssl/gortc.io.crt;
+          ssl_certificate_key /home/web/ssl/gortc.io.key;
+          ssl_protocols       TLSv1.1 TLSv1.2;
   tasks:
     - name: install web
       notify: restart web
