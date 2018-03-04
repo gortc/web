@@ -1,0 +1,44 @@
+---
+# Install python if missing.
+- hosts: all
+  gather_facts: False
+
+  tasks:
+  - name: install python 2
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+
+# Playbook for GoRTC web server.
+# Ubuntu 16.04 is expected.
+- hosts: all
+  roles:
+    - gortc.go
+    - geerlingguy.nginx
+  tasks:
+    - name: install web
+      git:
+        repo: https://github.com/cydev/web.git
+        dest: /home/web/root
+      become: web
+      become_user: web
+    - name: build
+      make:
+        chdir: /home/web/root
+        target: build-prod
+      become: web
+      become_user: web
+    - name: install systemd service file
+      template: src=web.service.j2 dest=/etc/systemd/system/web.service
+  pre_tasks:
+    - name: update apt cache if needed
+      apt: update_cache=yes cache_valid_time=3600
+
+    - name: install common packages
+      apt: pkg={{ item }} state=present update_cache=yes
+      with_items:
+        - git
+        - htop
+        - unzip
+        - python-pip
+
+    - name: remove require tty
+      lineinfile: regexp="^\s+\w+\s+requiretty" dest=/etc/sudoers state=absent
