@@ -176,7 +176,7 @@ func main() {
 		w.Header().Add("Content-type", "application/json")
 		encoder := json.NewEncoder(w)
 		origin := r.Header.Get("Origin")
-		server := "stun:a1.cydev.ru"
+		server := "stun:rs.cydev.ru"
 		if len(origin) > 0 {
 			u, err := url.Parse(origin)
 			if err != nil {
