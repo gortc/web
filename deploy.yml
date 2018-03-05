@@ -1,12 +1,4 @@
 ---
-# Install python if missing.
-- hosts: all
-  gather_facts: False
-
-  tasks:
-  - name: install python 2
-    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
-
 # Playbook for GoRTC web server.
 # Ubuntu 16.04 is expected.
 - hosts: all
@@ -27,6 +19,10 @@
           ssl_certificate     /home/web/ssl/gortc.io.crt;
           ssl_certificate_key /home/web/ssl/gortc.io.key;
           ssl_protocols       TLSv1.1 TLSv1.2;
+      - listen: "80"
+        server_name: "gortc.io"
+        return: "301 https://gortc.io$request_uri"
+        filename: "web.80.conf"
   tasks:
     - name: install web
       notify: restart web
@@ -35,15 +31,20 @@
       git:
         repo: https://github.com/cydev/web.git
         dest: /home/web/go/src/github.com/cydev/web
+
     - name: build
       become: true
       become_user: web
-      make:
+      shell: /usr/local/go/bin/go build -v -o cydev-web
+      args:
         chdir: /home/web/go/src/github.com/cydev/web
-        target: build-prod
+      register: test
+      changed_when: test.stdout
+
     - name: install systemd service file
       template: src=web.service.j2 dest=/etc/systemd/system/web.service
       notify: restart web
+
     - name: ensure that service is enabled and started
       systemd:
         name: web
@@ -51,6 +52,11 @@
         enabled: yes
         daemon_reload: yes
   pre_tasks:
+    - name: install python2 for Ansible
+      raw: test -e /usr/bin/python || (apt update && apt install -y python)
+      register: test
+      changed_when: test.stdout
+
     - name: update apt cache if needed
       apt: update_cache=yes cache_valid_time=3600
 
