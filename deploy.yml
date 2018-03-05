@@ -25,7 +25,6 @@
         filename: "web.80.conf"
   tasks:
     - name: install web
-      notify: restart web
       become: true
       become_user: web
       git:
@@ -33,13 +32,14 @@
         dest: /home/web/go/src/github.com/cydev/web
 
     - name: build
+      notify: restart web
       become: true
       become_user: web
       shell: /usr/local/go/bin/go build -v -o cydev-web
       args:
         chdir: /home/web/go/src/github.com/cydev/web
       register: test
-      changed_when: test.stdout
+      changed_when: test.stderr
 
     - name: install systemd service file
       template: src=web.service.j2 dest=/etc/systemd/system/web.service
