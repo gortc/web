@@ -27,6 +27,7 @@
     - name: install web
       become: true
       become_user: web
+      notify: restart web      
       git:
         repo: https://github.com/cydev/web.git
         dest: /home/web/go/src/github.com/cydev/web
