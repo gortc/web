@@ -29,16 +29,16 @@
       become_user: web
       notify: restart web      
       git:
-        repo: https://github.com/cydev/web.git
-        dest: /home/web/go/src/github.com/cydev/web
+        repo: https://github.com/gortc/web.git
+        dest: /home/web/go/src/github.com/gortc/web
 
     - name: build
       notify: restart web
       become: true
       become_user: web
-      shell: /usr/local/go/bin/go build -v -o cydev-web
+      shell: /usr/local/go/bin/go build -v -o gortc-web
       args:
-        chdir: /home/web/go/src/github.com/cydev/web
+        chdir: /home/web/go/src/github.com/gortc/web
       register: test
       changed_when: test.stderr
 
