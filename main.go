@@ -206,7 +206,29 @@ func main() {
 	defer mLog.Close()
 	csvLog := csv.NewWriter(mLog)
 
-	http.HandleFunc("/sdp", func(w http.ResponseWriter, r *http.Request) {
+	// Custom domain support.
+	for _, name := range []string{
+		"stun", "turn", "sdp", "web", "ice",
+	} {
+		body := strings.Replace(`<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="go-import" content="gortc.io/pkg git https://github.com/gortc/sdp.git">
+    <meta name="go-source"
+          content="gortc.io/pkg https://github.com/gortc/pkg/ https://github.com/gortc/pkg/tree/master{/dir} https://github.com/gortc/pkg/blob/master{/dir}/{file}#L{line}">
+    <meta http-equiv="refresh" content="0; url=https://godoc.org/gortc.io/pkg">
+</head>
+<body>
+Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
+</body>`, "pkg", name, -1)
+		http.HandleFunc("/" + name, func(w http.ResponseWriter, r *http.Request) {
+			defer r.Body.Close()
+			fmt.Fprint(w, body)
+		})
+	}
+
+	http.HandleFunc("/x/sdp", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		log.Println("http:", r.Method, "request from", r.RemoteAddr)
 		if r.Method == http.MethodGet {
