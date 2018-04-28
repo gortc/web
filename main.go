@@ -214,7 +214,7 @@ func main() {
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="go-import" content="gortc.io/pkg git https://github.com/gortc/sdp.git">
+    <meta name="go-import" content="gortc.io/pkg git https://github.com/gortc/pkg.git">
     <meta name="go-source"
           content="gortc.io/pkg https://github.com/gortc/pkg/ https://github.com/gortc/pkg/tree/master{/dir} https://github.com/gortc/pkg/blob/master{/dir}/{file}#L{line}">
     <meta http-equiv="refresh" content="0; url=https://godoc.org/gortc.io/pkg">
