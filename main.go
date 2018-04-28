@@ -232,7 +232,7 @@ Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
 		defer r.Body.Close()
 		log.Println("http:", r.Method, "request from", r.RemoteAddr)
 		if r.Method == http.MethodGet {
-			http.Redirect(w, r, "/sdp/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/x/sdp/", http.StatusPermanentRedirect)
 			return
 		}
 		s := sdp.Session{}
