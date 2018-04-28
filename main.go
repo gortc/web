@@ -222,7 +222,7 @@ func main() {
 <body>
 Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
 </body>`, "pkg", name, -1)
-		http.HandleFunc("/" + name, func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc("/" + name + "/", func(w http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
 			fmt.Fprint(w, body)
 		})
