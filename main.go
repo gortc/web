@@ -308,17 +308,19 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	update := func() {
+		newStats, err := getStats(true)
+		if err != nil {
+			log.Println("failed to fetch stats:", err)
+		}
+		sLock.Lock()
+		s = newStats
+		sLock.Unlock()
+	}
 	go func() {
-		// TODO(ar): Add github webhooks and lower ticker rate.
-		ticker := time.NewTicker(time.Minute)
+		ticker := time.NewTicker(time.Second * 90)
 		for range ticker.C {
-			newStats, err := getStats(true)
-			if err != nil {
-				log.Println("failed to fetch stats:", err)
-			}
-			sLock.Lock()
-			s = newStats
-			sLock.Unlock()
+			update()
 		}
 	}()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -332,6 +334,11 @@ func main() {
 			fmt.Fprintln(w, err)
 		}
 		sLock.RUnlock()
+	})
+	http.HandleFunc("/hook", func(writer http.ResponseWriter, request *http.Request) {
+		// TODO(ar): check secret
+		update()
+		writer.WriteHeader(http.StatusOK)
 	})
 	http.HandleFunc("/ice-configuration", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")
