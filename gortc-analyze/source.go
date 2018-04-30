@@ -6,6 +6,11 @@ import (
 	"log"
 	"time"
 
+	"bytes"
+	"encoding/json"
+	"os"
+	"os/exec"
+
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
@@ -13,6 +18,50 @@ import (
 var (
 	fetch = flag.Bool("fetch", false, "fetch")
 )
+
+type tokeiLanguageReport struct {
+	Blanks   int `json:"blanks"`
+	Code     int `json:"code"`
+	Comments int `json:"comments"`
+	Stats    []struct {
+		Blanks   int    `json:"blanks"`
+		Code     int    `json:"code"`
+		Comments int    `json:"comments"`
+		Lines    int    `json:"lines"`
+		Name     string `json:"name"`
+	} `json:"stats"`
+	Lines int `json:"lines"`
+}
+
+type TokeiReport struct {
+	CSS        tokeiLanguageReport `json:"Css"`
+	Dockerfile tokeiLanguageReport `json:"Dockerfile"`
+	Go         tokeiLanguageReport `json:"Go"`
+	Hex        tokeiLanguageReport `json:"Hex"`
+	HTML       tokeiLanguageReport `json:"Html"`
+	Makefile   tokeiLanguageReport `json:"Makefile"`
+	Markdown   tokeiLanguageReport `json:"Markdown"`
+	Sh         tokeiLanguageReport `json:"Sh"`
+	Text       tokeiLanguageReport `json:"Text"`
+	Toml       tokeiLanguageReport `json:"Toml"`
+	Yaml       tokeiLanguageReport `json:"Yaml"`
+}
+
+func getTokeiReport(path string) (*TokeiReport, error) {
+	cmd := exec.Command("tokei", "-e", "vendor/", path, "-o", "json")
+	buf := new(bytes.Buffer)
+	cmd.Stdout = buf
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+	decoder := json.NewDecoder(buf)
+	r := new(TokeiReport)
+	if err := decoder.Decode(r); err != nil {
+		return nil, err
+	}
+	return r, nil
+}
 
 func main() {
 	flag.Parse()
@@ -45,6 +94,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		rep, err := getTokeiReport(p)
+		if err != nil {
+			log.Fatal(err)
+		}
 		ref, err := r.Head()
 		if err != nil {
 			log.Fatal(err)
@@ -69,6 +122,7 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Println(name, "commits:", commits)
+		fmt.Println(name, "lines", rep.Go.Lines)
 		total += commits
 	}
 	fmt.Println("total:", total)
