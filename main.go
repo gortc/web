@@ -15,11 +15,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
-
-	"os/exec"
 
 	"github.com/ernado/ice"
 	"github.com/gortc/sdp"
@@ -330,6 +329,7 @@ func main() {
 			fs.ServeHTTP(w, r)
 			return
 		}
+		w.Header().Add("Link", "</go-rtc.svg>; as=image; rel=preload")
 		sLock.RLock()
 		if err := t.Execute(w, s); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

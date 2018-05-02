@@ -15,6 +15,7 @@
         extra_parameters: |
           location / {
             proxy_pass http://localhost:3000;
+            http2_push_preload on;
           }
           ssl_certificate     /home/web/ssl/gortc.io.crt;
           ssl_certificate_key /home/web/ssl/gortc.io.key;
