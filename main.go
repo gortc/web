@@ -304,10 +304,12 @@ func main() {
 		s     *stats
 		sLock sync.RWMutex
 	)
+	log.Println("gettings stats")
 	s, err = getStats(false)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("got stats")
 	update := func() {
 		newStats, err := getStats(true)
 		if err != nil {
