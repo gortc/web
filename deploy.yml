@@ -4,7 +4,7 @@
 - hosts: all
   roles:
     - gortc.go
-    - geerlingguy.nginx
+    - gortc.nginx
   vars:
     nginx_vhosts:
       - listen: "443 ssl http2"
