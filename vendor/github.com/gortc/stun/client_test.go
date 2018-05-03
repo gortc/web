@@ -1,9 +1,12 @@
 package stun
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"io"
 	"log"
+	"os"
 	"testing"
 	"time"
 )
@@ -441,5 +444,83 @@ func TestClientGC(t *testing.T) {
 	case <-agent.gc:
 	case <-time.After(time.Millisecond * 200):
 		t.Error("timed out")
+	}
+}
+
+func TestClientCheckInit(t *testing.T) {
+	if err := (&Client{}).Indicate(nil); err != ErrClientNotInitialized {
+		t.Error("unexpected error")
+	}
+	if err := (&Client{}).Do(nil, time.Time{}, nil); err != ErrClientNotInitialized {
+		t.Error("unexpected error")
+	}
+}
+
+func captureLog() (*bytes.Buffer, func()) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	f := log.Flags()
+	log.SetFlags(0)
+	return &buf, func() {
+		log.SetFlags(f)
+		log.SetOutput(os.Stderr)
+	}
+}
+
+func TestClientFinalizer(t *testing.T) {
+	buf, stopCapture := captureLog()
+	defer stopCapture()
+	clientFinalizer(nil) // should not panic
+	clientFinalizer(&Client{})
+	conn := &testConnection{
+		write: func(bytes []byte) (int, error) {
+			return 0, io.ErrClosedPipe
+		},
+	}
+	c, err := NewClient(ClientOptions{
+		Connection: conn,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	clientFinalizer(c)
+	clientFinalizer(c)
+	response := MustBuild(TransactionID, BindingSuccess)
+	response.Encode()
+	conn = &testConnection{
+		b: response.Raw,
+		write: func(bytes []byte) (int, error) {
+			return len(bytes), nil
+		},
+	}
+	c, err = NewClient(ClientOptions{
+		Agent: errorAgent{
+			closeErr: io.ErrUnexpectedEOF,
+		},
+		Connection: conn,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	clientFinalizer(c)
+	reader := bufio.NewScanner(buf)
+	var lines int
+	var expectedLines = []string{
+		"client: called finalizer on non-closed client: client not initialized",
+		"client: called finalizer on non-closed client",
+		"client: called finalizer on non-closed client: failed to close: " +
+			"<nil> (connection), unexpected EOF (agent)",
+	}
+	for reader.Scan() {
+		if reader.Text() != expectedLines[lines] {
+			t.Error(reader.Text(), "!=", expectedLines[lines])
+		}
+		lines++
+	}
+	if reader.Err() != nil {
+		t.Error(err)
+	}
+	if lines != 3 {
+		t.Error("incorrect count of log lines:", lines)
 	}
 }

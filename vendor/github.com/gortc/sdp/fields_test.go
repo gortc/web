@@ -1,6 +1,7 @@
 package sdp
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"testing"
@@ -11,7 +12,7 @@ func shouldDecode(tb testing.TB, s Session, name string) {
 	buf := make([]byte, 0, 1024)
 	tData := loadData(tb, name)
 	buf = s.AppendTo(buf)
-	if !byteSliceEqual(tData, buf) {
+	if !bytes.Equal(tData, buf) {
 		fmt.Println(tData)
 		fmt.Println(buf)
 		fmt.Println(string(tData))

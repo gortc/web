@@ -27,11 +27,11 @@
 
 [[constraint]]
   name = "github.com/ernado/sdp"
-  version = "0.9.1"
+  version = "0.9"
 
 [[constraint]]
   name = "github.com/ernado/stun"
-  version = "1.6.0"
+  version = "1.6"
 
 [[constraint]]
   name = "github.com/mssola/user_agent"
@@ -39,4 +39,4 @@
 
 [[constraint]]
   name = "github.com/pkg/errors"
-  version = "0.8.0"
+  version = "0.9"

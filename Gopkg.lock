@@ -16,14 +16,14 @@
 [[projects]]
   name = "github.com/gortc/sdp"
   packages = ["."]
-  revision = "6633fbed98987899147f40111a887f71e9ba7faa"
-  version = "v0.9.1"
+  revision = "8c03e00ae01b25f34ab59a5f76067fc0b4da22f4"
+  version = "v0.9.2"
 
 [[projects]]
   name = "github.com/gortc/stun"
   packages = ["."]
-  revision = "dca36b59733d9246b038f2546647f031d11fecf6"
-  version = "v1.6.1"
+  revision = "4eadb3089b3972b7dfcbb6d16e8d54a100d59704"
+  version = "v1.6.2"
 
 [[projects]]
   branch = "master"
@@ -107,19 +107,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["cast5","curve25519","ed25519","ed25519/internal/edwards25519","internal/chacha20","openpgp","openpgp/armor","openpgp/elgamal","openpgp/errors","openpgp/packet","openpgp/s2k","poly1305","ssh","ssh/agent","ssh/knownhosts"]
-  revision = "db7d12313a59cd5b727192a287195e2cdfa40049"
+  revision = "76a954637dfa3223c13edb4529f981f0d62cfa26"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
+  revision = "640f4622ab692b87c2f3a94265e6f579fe38263d"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["windows"]
-  revision = "f67ecc163a74fbeea4cb1db0a101dcd07201464a"
+  revision = "78d5f264b493f125018180c204871ecf58a2dce1"
 
 [[projects]]
   name = "golang.org/x/text"

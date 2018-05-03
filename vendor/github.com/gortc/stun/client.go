@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -56,7 +58,23 @@ func NewClient(options ClientOptions) (*Client, error) {
 	c.wg.Add(2)
 	go c.readUntilClosed()
 	go c.collectUntilClosed()
+	runtime.SetFinalizer(c, clientFinalizer)
 	return c, nil
+}
+
+func clientFinalizer(c *Client) {
+	if c == nil {
+		return
+	}
+	err := c.Close()
+	if err == ErrClientClosed {
+		return
+	}
+	if err == nil {
+		log.Println("client: called finalizer on non-closed client")
+		return
+	}
+	log.Println("client: called finalizer on non-closed client:", err)
 }
 
 // Connection wraps Reader, Writer and Closer interfaces.
@@ -81,9 +99,9 @@ type Client struct {
 	a         ClientAgent
 	c         Connection
 	close     chan struct{}
+	gcRate    time.Duration
 	closed    bool
 	closedMux sync.RWMutex
-	gcRate    time.Duration
 	wg        sync.WaitGroup
 }
 
@@ -164,6 +182,9 @@ var ErrClientClosed = errors.New("client is closed")
 
 // Close stops internal connection and agent, returning CloseErr on error.
 func (c *Client) Close() error {
+	if err := c.checkInit(); err != nil {
+		return err
+	}
 	c.closedMux.Lock()
 	if c.closed {
 		c.closedMux.Unlock()
@@ -171,8 +192,7 @@ func (c *Client) Close() error {
 	}
 	c.closed = true
 	c.closedMux.Unlock()
-	agentErr := c.a.Close()
-	connErr := c.c.Close()
+	agentErr, connErr := c.a.Close(), c.c.Close()
 	close(c.close)
 	c.wg.Wait()
 	if agentErr == nil && connErr == nil {
@@ -236,12 +256,25 @@ var callbackWaitHandlerPool = sync.Pool{
 	},
 }
 
+// ErrClientNotInitialized means that client connection or agent is nil.
+var ErrClientNotInitialized = errors.New("client not initialized")
+
+func (c *Client) checkInit() error {
+	if c == nil || c.c == nil || c.a == nil || c.close == nil {
+		return ErrClientNotInitialized
+	}
+	return nil
+}
+
 // Do is Start wrapper that waits until callback is called. If no callback
 // provided, Indicate is called instead.
 //
 // Do has cpu overhead due to blocking, see BenchmarkClient_Do.
 // Use Start method for less overhead.
 func (c *Client) Do(m *Message, d time.Time, f func(Event)) error {
+	if err := c.checkInit(); err != nil {
+		return err
+	}
 	if f == nil {
 		return c.Indicate(m)
 	}
@@ -261,6 +294,9 @@ func (c *Client) Do(m *Message, d time.Time, f func(Event)) error {
 // Start starts transaction (if f set) and writes message to server, handler
 // is called asynchronously.
 func (c *Client) Start(m *Message, d time.Time, h Handler) error {
+	if err := c.checkInit(); err != nil {
+		return err
+	}
 	c.closedMux.RLock()
 	closed := c.closed
 	c.closedMux.RUnlock()
