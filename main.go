@@ -310,6 +310,7 @@ func main() {
 	}
 	log.Println("got stats")
 	update := func() {
+		log.Println("updating stats")
 		newStats, err := getStats(true)
 		if err != nil {
 			log.Println("failed to fetch stats:", err)
