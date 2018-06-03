@@ -1,0 +1,7 @@
+---
+lego_dir: /var/lego
+cert_dir: "{{ lego_dir }}/certificates"
+nginx_acme_dir: "{{ lego_dir }}/acme/"
+lego_server: https://acme-v01.api.letsencrypt.org/directory
+lego_version: v0.4.1
+lego_email: "ar@cydev.ru"
