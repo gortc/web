@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ernado/ice"
+	"github.com/gortc/ice"
 	"github.com/gortc/sdp"
 	"github.com/gortc/stun"
 	"github.com/mssola/user_agent"

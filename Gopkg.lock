@@ -8,10 +8,10 @@
   version = "v1.9.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/ernado/ice"
+  name = "github.com/gortc/ice"
   packages = ["."]
-  revision = "ec734f8315c8080b49bc6d5e65b65c052b2bd7c6"
+  revision = "68d07a85965ef9417cb995049ec998d24c1104c6"
+  version = "v0.0.2"
 
 [[projects]]
   name = "github.com/gortc/sdp"
@@ -148,6 +148,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7f6fe1ca502d1f41a697207f5a0683df6ee866082c40f898420dd69793d4ca9a"
+  inputs-digest = "27d368fae02c2ae25d53550ee6bf9d0db759953dceac52316a717e8f3a0e59b5"
   solver-name = "gps-cdcl"
   solver-version = 1
