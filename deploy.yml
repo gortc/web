@@ -104,7 +104,7 @@
       notify: restart web
       become: true
       become_user: web
-      shell: /usr/local/go/bin/vgo build -v -o gortc-web
+      shell: /home/web/go/bin/vgo build -v -o gortc-web
       args:
         chdir: /home/web/go/src/github.com/gortc/web
       register: test
