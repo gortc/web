@@ -85,10 +85,17 @@
           }
         filename: "pcl.80.conf"
   tasks:
+    - name: install vgo
+      become: true
+      become_user: web
+      shell: /usr/local/go/bin/go get golang.org/x/vgo
+      register: test
+      changed_when: test.stderr
+
     - name: install web
       become: true
       become_user: web
-      notify: restart web      
+      notify: restart web
       git:
         repo: https://github.com/gortc/web.git
         dest: /home/web/go/src/github.com/gortc/web
@@ -97,7 +104,7 @@
       notify: restart web
       become: true
       become_user: web
-      shell: /usr/local/go/bin/go build -v -o gortc-web
+      shell: /usr/local/go/bin/vgo build -v -o gortc-web
       args:
         chdir: /home/web/go/src/github.com/gortc/web
       register: test

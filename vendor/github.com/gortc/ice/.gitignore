@@ -1,7 +1,0 @@
-.idea
-mem.out
-cpu.out
-benchmark.*.write
-*.test
-bench.go-*
-PACKAGES
