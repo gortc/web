@@ -355,8 +355,8 @@ func main() {
 			fmt.Println(writer, "failed:", err)
 			return
 		}
-		fmt.Fprintln(writer, "updated in", time.Since(start))
 		writer.WriteHeader(http.StatusOK)
+		fmt.Fprintln(writer, "updated in", time.Since(start))
 	})
 	http.HandleFunc("/ice-configuration", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")
