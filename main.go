@@ -238,13 +238,18 @@ func getStats(fetch bool) (*stats, error) {
 		if err == git.ErrRepositoryAlreadyExists {
 			r, err = git.PlainOpen(p)
 			if err != nil {
-				log.Fatal(err)
+				return nil, err
+			}
+			w, err := r.Worktree()
+			if err != nil {
+				return nil, err
 			}
 			if fetch {
-				err = r.Fetch(&git.FetchOptions{
-					Force: true,
+				err = w.Pull(&git.PullOptions{
+					Force:      true,
+					RemoteName: "origin",
 				})
-				log.Println("fetch", name, err)
+				log.Println("pull", name, err)
 				if err == git.NoErrAlreadyUpToDate {
 					err = nil
 				}
