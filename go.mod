@@ -10,6 +10,7 @@ require (
 	github.com/mssola/user_agent v0.4.1
 	github.com/pelletier/go-buffruneio v0.2.0
 	github.com/sergi/go-diff v1.0.0
+	github.com/sourcegraph/go-vcsurl v0.0.0-20161114165620-2305ecca26ab
 	github.com/src-d/gcfg v1.3.0
 	github.com/xanzy/ssh-agent v0.0.0-20151215153451-ba9c9e33906f
 	golang.org/x/crypto v0.0.0-20180503153109-76a954637dfa
@@ -17,6 +18,6 @@ require (
 	golang.org/x/sys v0.0.0-20180501092740-78d5f264b493
 	golang.org/x/text v0.3.0
 	gopkg.in/src-d/go-billy.v4 v4.1.1
-	gopkg.in/src-d/go-git.v4 v4.3.1
+	gopkg.in/src-d/go-git.v4 v4.4.1
 	gopkg.in/warnings.v0 v0.1.2
 )
