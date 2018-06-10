@@ -32,6 +32,10 @@
     - name: remove require tty
       lineinfile: regexp="^\s+\w+\s+requiretty" dest=/etc/sudoers state=absent
 
+    - name: Add web user
+      user:
+        name: web
+        shell: /bin/bash
   tasks:
     - name: incude custom variables
       include_vars:
@@ -89,8 +93,8 @@
       become: true
       become_user: web
       shell: /usr/local/go/bin/go get golang.org/x/vgo
-      register: test
-      changed_when: test.stderr
+      register: vgo
+      changed_when: vgo.stderr
 
     - name: install web
       become: true
@@ -107,8 +111,8 @@
       shell: /home/web/go/bin/vgo build -v -o gortc-web
       args:
         chdir: /home/web/go/src/github.com/gortc/web
-      register: test
-      changed_when: test.stderr
+      register: build
+      changed_when: build.stderr
 
     - name: install systemd service file
       template: src=web.service.j2 dest=/etc/systemd/system/web.service
