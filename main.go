@@ -309,15 +309,17 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("got stats")
-	update := func() {
+	update := func() error {
 		log.Println("updating stats")
 		newStats, err := getStats(true)
 		if err != nil {
 			log.Println("failed to fetch stats:", err)
+			return err
 		}
 		sLock.Lock()
 		s = newStats
 		sLock.Unlock()
+		return nil
 	}
 	go func() {
 		ticker := time.NewTicker(time.Second * 90)
@@ -341,7 +343,12 @@ func main() {
 	http.HandleFunc("/hook", func(writer http.ResponseWriter, request *http.Request) {
 		// TODO(ar): check secret
 		start := time.Now()
-		update()
+		err := update()
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			fmt.Println(writer, "failed:", err)
+			return
+		}
 		fmt.Fprintln(writer, "updated in", time.Since(start))
 		writer.WriteHeader(http.StatusOK)
 	})
