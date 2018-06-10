@@ -8,6 +8,10 @@ import (
 	"github.com/gortc/stun"
 )
 
+var messages = &storage{
+	data: make(map[string]*storageEntry),
+}
+
 type storageEntry struct {
 	*stun.Message
 	createdAt time.Time

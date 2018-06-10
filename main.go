@@ -29,9 +29,6 @@ var (
 	portHTTP = flag.Int("port", 3000, "http server port")
 	hostHTTP = flag.String("host", "localhost", "http server host")
 	portSTUN = flag.Int("port-stun", stun.DefaultPort, "UDP port")
-	messages = &storage{
-		data: make(map[string]*storageEntry),
-	}
 )
 
 var (
