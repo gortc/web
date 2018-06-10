@@ -262,6 +262,7 @@ func getStats(fetch bool) (*stats, error) {
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(name, "head", ref)
 		b, err := r.Log(&git.LogOptions{
 			From: ref.Hash(),
 		})
