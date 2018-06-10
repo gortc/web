@@ -303,12 +303,17 @@ func main() {
 		s     *stats
 		sLock sync.RWMutex
 	)
-	log.Println("gettings stats")
-	s, err = getStats(false)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("got stats")
+	go func() {
+		sLock.Lock()
+		log.Println("gettings stats")
+		s, err = getStats(false)
+		if err != nil {
+			log.Println("failed to get stats:", err)
+		} else {
+			log.Println("got stats")
+		}
+		sLock.Unlock()
+	}()
 	update := func() error {
 		log.Println("updating stats")
 		newStats, err := getStats(true)
