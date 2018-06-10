@@ -229,7 +229,7 @@ func getStats(fetch bool) (*stats, error) {
 	last24h := n.AddDate(0, 0, -1)
 	var total, last30DaysTotal, last7DaysTotal, last24hTotal, lines int
 	for _, name := range []string{
-		"stun", "turn", "sdp", "web", "stund", "tech-status", "ice", "rtc",
+		"stun", "turn", "sdp", "web", "stund", "tech-status", "ice", "rtc", "gortcd",
 	} {
 		p := "/tmp/gortc-analyze/" + name
 		r, err := git.PlainClone(p, false, &git.CloneOptions{
