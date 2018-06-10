@@ -340,7 +340,9 @@ func main() {
 	})
 	http.HandleFunc("/hook", func(writer http.ResponseWriter, request *http.Request) {
 		// TODO(ar): check secret
+		start := time.Now()
 		update()
+		fmt.Fprintln(writer, "updated in", time.Since(start))
 		writer.WriteHeader(http.StatusOK)
 	})
 	http.HandleFunc("/ice-configuration", func(w http.ResponseWriter, r *http.Request) {
