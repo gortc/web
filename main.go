@@ -244,6 +244,7 @@ func getStats(fetch bool) (*stats, error) {
 				err = r.Fetch(&git.FetchOptions{
 					Force: true,
 				})
+				log.Println("fetch", name, err)
 				if err == git.NoErrAlreadyUpToDate {
 					err = nil
 				}
