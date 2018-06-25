@@ -105,7 +105,7 @@ func getStats(fetch bool) (*stats, error) {
 		if err != nil {
 			return nil, err
 		}
-		lines += rep.Go.Lines
+		lines += rep.Go.Lines + rep.Yaml.Lines
 		ref, err := r.Head()
 		if err != nil {
 			return nil, err
