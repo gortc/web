@@ -1,4 +1,17 @@
 ---
+- hosts: all
+  gather_facts: False
+  
+  tasks:
+  - name: install python 2
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    register: test
+    changed_when: test.stdout
+
+  - name: remove require tty
+    lineinfile: regexp="^\s+\w+\s+requiretty" dest=/etc/sudoers state=absent
+
+
 - name: Prepare nodes
   hosts: all
   handlers:
@@ -6,11 +19,6 @@
       service: name=ufw state=restarted
 
   pre_tasks:
-    - name: install python2 for Ansible
-      raw: test -e /usr/bin/python || (apt update && apt install -y python)
-      register: test
-      changed_when: test.stdout
-
     - name: update apt cache if needed
       apt: update_cache=yes cache_valid_time=3600
 
@@ -28,9 +36,6 @@
         name: "{{ item }}"
       with_items:
         - passlib
-
-    - name: remove require tty
-      lineinfile: regexp="^\s+\w+\s+requiretty" dest=/etc/sudoers state=absent
 
     - name: Add web user
       user:
