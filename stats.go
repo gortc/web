@@ -73,6 +73,7 @@ func getStats(fetch bool) (*stats, error) {
 	var total, last30DaysTotal, last7DaysTotal, last24hTotal, lines int
 	for _, name := range []string{
 		"stun", "turn", "sdp", "web", "stund", "tech-status", "ice", "rtc", "gortcd",
+		"ansible-role-nginx", "ansible-go",
 	} {
 		p := "/tmp/gortc-analyze/" + name
 		r, err := git.PlainClone(p, false, &git.CloneOptions{
@@ -115,7 +116,15 @@ func getStats(fetch bool) (*stats, error) {
 			From: ref.Hash(),
 		})
 		var commits int
+		countAuthors := map[string]struct{}{
+			"ar@cydev.ru":     {},
+			"ernado@ya.ru":    {},
+			"mail@backkem.me": {},
+		}
 		if err = b.ForEach(func(commit *object.Commit) error {
+			if _, ok := countAuthors[commit.Author.Email]; !ok {
+				return nil
+			}
 			commits++
 			if commit.Author.When.After(last30Days) {
 				last30DaysTotal++
