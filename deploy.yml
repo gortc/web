@@ -4,7 +4,7 @@
   
   tasks:
   - name: install python 2
-    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python)
     register: test
     changed_when: test.stdout
 
@@ -94,6 +94,13 @@
           }
         filename: "pcl.80.conf"
   tasks:
+    - name: download tokei
+      unarchive:
+        src: https://github.com/Aaronepower/tokei/releases/download/v7.0.3/tokei-v7.0.3-x86_64-unknown-linux-gnu.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes
+        creates: /usr/local/bin/tokei
+
     - name: install vgo
       become: true
       become_user: web
