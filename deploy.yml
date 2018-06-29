@@ -72,7 +72,7 @@
     - gortc.nginx
   vars:
     nginx_vhosts:
-      - listen: "443 ssl http2"
+      - listen: "[::]:443 ipv6only=off ssl http2"
         server_name: "{{ fqdn }}"
         state: "present"
         file: "web.conf"
