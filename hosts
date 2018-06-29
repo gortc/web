@@ -2,4 +2,4 @@
 rs
 
 [rs]
-46.101.199.23 ansible_user=root fqdn=gortc.io
+gortc.io ansible_user=root fqdn=gortc.io
