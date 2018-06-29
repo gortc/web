@@ -30,6 +30,7 @@
         - unzip
         - python-pip
         - acl
+        - python-pkg-resources
 
     - name: install python libs
       pip:
