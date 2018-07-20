@@ -5,43 +5,80 @@
     <meta charset="utf-8"/>
     <meta name="description" content="Open source golang implementation for webrtc. STUN, TURN, ICE in go."/>
     <link rel="canonical" href="https://gortc.io"/>
+    <link rel="stylesheet" href="css/main.css"/>
     <title>gortc: webrtc for go</title>
 </head>
 
-<h1>gortc</h1>
+<div id="container">
+    <h1>gortc</h1>
 
-<img src="/go-rtc.svg" height="230px" alt="gortc logo">
+    <img src="/go-rtc.svg" height="230px" alt="gortc logo" id="logo">
 
-<p>Open source webrtc stack implementation in go.</p>
+    <p>Open source webrtc stack implementation in go.</p>
 
-<p>The gortc project aims to implement WebRTC protocol in golang,
-    providing interoperability between golang clients (or servers),
-    browsers (or other agents, e.g. node-js implementation).</p>
+    <p>The gortc project aims to implement WebRTC protocol in golang,
+        providing interoperability between golang clients (or servers),
+        browsers (or other agents, e.g. node-js implementation).</p>
 
-<p>The main goal is stable RTCPeerConnection with RTCDataChannel that is compatible with most agents.</p>
+    <h2><a href="#original-author" id="original-author">Original author</a></h2>
+    <p>I'm Aleksandr Razumov (<a href="https://github.com/ernado">ernado</a>), full time go developer with commercial experience
+        starting from 2014 (and non-go from 2011) and currently working at
+        German company not related to project.</p>
+    <h2><a href="#goals" id="goals">Goals</a></h2>
+    <ul>
+        <li>Create tools and libraries for NAT traversal and ICE</li>
+        <li>Make them safe, reliable, fast, stable and simple to use and extend</li>
+        <li>Make them useful (extensible and flexible) for enterprise while staying open source</li>
+        <li>Don't be hype and PR driven, popularity and stars count are not appropriate metrics</li>
+    </ul>
+    <h2><a href="#principles" id="principles">Principles</a></h2>
+    <ul>
+        <li>High and rigorous standards for core packages:
+            <ul>
+                <li>Minimum (none is ideal) 3-rd party deps</li>
+                <li>Greater than 90% test coverage</li>
+                <li>Benchmarks to track performance</li>
+                <li>Zero-allocation in hot paths</li>
+                <li>Tests for zero allocation</li>
+                <li><a href="https://en.wikipedia.org/wiki/Fuzzing">Fuzz</a>-testing</li>
+                <li>Integration (functional, e2e) tests</li>
+                <li>Static checks (linters)</li>
+            </ul>
+        </li>
+        <li>Mostly bottom-up development with feedback loop</li>
+        <li>Decoupling and abstraction layer isolation</li>
+        <li>Conscious architecture design with clear goals</li>
+        <li>Follow <a href="https://golang.org/doc/effective_go.html">effective go</a> and <a href="https://github.com/golang/go/wiki/CodeReviewComments">CodeReviewComments</a></li>
+        <li>Follow <a href="https://semver.org/">semver</a> with <code>v</code> prefix for tags, like <code>v1.2.0</code></li>
+        <li>Use RFC wording whenever possible but not at the expense of idiomaticity</li>
+    </ul>
+    <h2><a href="#contributors" id="contributors">Contributors</a></h2>
+    <p>Thanks so much for contribution to the gortc project:</p>
+    <ul>
+        <li><a href="https://github.com/backkem">backkem</a></li>
+    </ul>
+    <h2><a href="#links" id="links">Links</a></h2>
 
-<p>Security, efficiency (both memory and cpu), simplicity, code quality, and low dependencies are paramount goals.</p>
+    Project is in active development, but some of the build blocks are already implemented. Now you can:
 
-<h2>Links</h2>
+    <ul>
+        <li>Join <a href="https://t.me/gortc">telegram group</a> or <a href="https://gitter.im/gortc/chat">gitter chat</a> for support</li>
+        <li>See <a href="https://github.com/gortc/">github organization</a> for available code</li>
+        <li>Track <a href="https://github.com/gortc/tech-status">progress</a> by watching special repo</li>
+        <li>Look at initial <a href="https://b.gortc.io/gortc.html">documentation</a></li>
+        <li>Try <a class="link" href="/x/sdp/">SDP from WebRTC</a> demo</li>
+    </ul>
 
-Project is in active development, but some of the build blocks are already implemented. Now you can:
+    <h2><a href="#stats" id="stats">Stats</a></h2>
+    <h3>Commits</h3>
 
-<ul>
-    <li>Join <a href="https://t.me/gortc">telegram group</a> or <a href="https://gitter.im/gortc/chat">gitter chat</a> for support</li>
-    <li>See <a href="https://github.com/gortc/">github organization</a> for available code</li>
-    <li>Track <a href="https://github.com/gortc/tech-status">progress</a> by watching special repo</li>
-    <li>Look at initial <a href="https://b.gortc.io/gortc.html">documentation</a></li>
-    <li>Try <a class="link" href="/x/sdp/">SDP from WebRTC</a> demo</li>
-</ul>
+    <p>Total: {{ .Total }} commits, {{ .Lines }} lines</p>
+    <p>Last 30 days: {{ .Last30d }}</p>
+    <p>Last 7 days: {{ .Last7d }}</p>
+    <p>Last 24 hours: {{ .Last24h }}</p>
+    <hr>
+    <p>Contributions and bug reports are welcome.</p>
+</div>
 
-<h2>Stats</h2>
-<h3>Commits</h3>
-
-<p>Total: {{ .Total }} commits, {{ .Lines }} lines</p>
-<p>Last 30 days: {{ .Last30d }}</p>
-<p>Last 7 days: {{ .Last7d }}</p>
-<p>Last 24 hours: {{ .Last24h }}</p>
-<hr>
-<p>Contributions and bug reports are welcome.</p>
 
 </html>

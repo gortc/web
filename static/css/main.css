@@ -11,6 +11,26 @@ a, .exampleHeading .text {
     text-decoration: none;
 }
 
+#container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 728px;
+    box-sizing: border-box;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #333;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+#logo {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
 code {
     font-family: "Go Mono", monospace;
     background: #F3F3F3;
