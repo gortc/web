@@ -116,6 +116,7 @@
       git:
         repo: https://github.com/gortc/web.git
         dest: /home/web/go/src/github.com/gortc/web
+        force: yes
 
     - name: build
       notify: restart web
