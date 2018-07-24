@@ -9,7 +9,6 @@ require (
 	github.com/gliderlabs/ssh v0.1.1
 	github.com/google/go-cmp v0.2.0
 	github.com/gortc/ice v0.0.2
-	github.com/gortc/sdp v0.9.2
 	github.com/gortc/stun v1.6.2
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99
 	github.com/kevinburke/ssh_config v0.0.0-20180317175531-9fc7bb800b55
