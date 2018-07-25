@@ -79,6 +79,8 @@
         template: "{{ nginx_vhost_template }}"
         acme: true
         extra_parameters: |
+          gzip on;
+          gzip_types text/plain text/html image/svg+xml application/font-woff text/css application/xml;
           location / {
             proxy_pass http://localhost:3000;
             http2_push_preload on;
