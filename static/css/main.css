@@ -140,6 +140,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/GoMedium-Italic.woff') format('woff');
     font-weight: 500;
     font-style: italic;
+    font-display: swap;
 }
 
 @font-face {
@@ -147,6 +148,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/Go-Italic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
+    font-display: swap;
 }
 
 @font-face {
@@ -154,6 +156,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/Go-Bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
@@ -161,6 +164,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/GoMedium.woff') format('woff');
     font-weight: 500;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
@@ -168,6 +172,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/Go-BoldItalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
+    font-display: swap;
 }
 
 @font-face {
@@ -175,6 +180,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/GoRegular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
@@ -182,6 +188,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/GoMono-Bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
@@ -189,6 +196,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/GoMono.woff') format('woff');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
@@ -196,6 +204,7 @@ h1, h2, h3, h4 {
     src: url('../fonts/GoMono-Italic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
+    font-display: swap;
 }
 
 @font-face {
@@ -203,4 +212,5 @@ h1, h2, h3, h4 {
     src: url('../fonts/GoMono-BoldItalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
+    font-display: swap;
 }
