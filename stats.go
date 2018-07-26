@@ -73,7 +73,7 @@ func getStats(fetch bool) (*stats, error) {
 	var total, last30DaysTotal, last7DaysTotal, last24hTotal, lines int
 	for _, name := range []string{
 		"stun", "turn", "sdp", "web", "stund", "tech-status", "ice", "rtc", "gortcd",
-		"ansible-role-nginx", "ansible-go",
+		"ansible-role-nginx", "ansible-go", "api",
 	} {
 		p := "/tmp/gortc-analyze/" + name
 		r, err := git.PlainClone(p, false, &git.CloneOptions{

@@ -73,7 +73,7 @@ func processUDPPacket(addr net.Addr, b []byte, req, res *stun.Message) error {
 		IP:   ip,
 		Port: port,
 	}.AddTo(res)
-	stun.NewSoftware("cydev.ru/sdp example").AddTo(res)
+	stun.NewSoftware("gortc.io/x/sdp example").AddTo(res)
 	res.WriteHeader()
 	messages.add(fmt.Sprintf("%s:%d", ip, port), req)
 	return nil
@@ -134,6 +134,7 @@ func main() {
 			return
 		}
 		w.Header().Add("Link", "</go-rtc.svg>; as=image; rel=preload")
+		w.Header().Add("Link", "</css/main.css>; as=style; rel=preload")
 		sLock.RLock()
 		if err := t.Execute(w, s); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -189,7 +190,7 @@ func main() {
 
 	// Custom domain support.
 	for _, name := range []string{
-		"stun", "turn", "sdp", "web", "ice",
+		"stun", "turn", "sdp", "web", "ice", "api",
 	} {
 		body := strings.Replace(`<!DOCTYPE html>
 <html>
