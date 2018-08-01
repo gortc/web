@@ -54,8 +54,6 @@
         file: "{{ var_file }}"
       when: var_file is defined
 
-
-
 - name: Prepare certificates
   hosts: all
   pre_tasks:
