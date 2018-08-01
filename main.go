@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	cloudflare "github.com/cloudflare/cloudflare-go"
 	"github.com/gortc/ice"
 	"github.com/gortc/sdp"
 	"github.com/gortc/stun"
@@ -89,6 +90,13 @@ type iceConfiguration struct {
 
 func main() {
 	flag.Parse()
+	cf, err := cloudflare.New(
+		os.Getenv("CF_API_KEY"),
+		os.Getenv("CF_API_EMAIL"),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 	t, err := template.ParseFiles("static/index.html")
 	if err != nil {
 		log.Fatal(err)
@@ -153,6 +161,28 @@ func main() {
 		}
 		writer.WriteHeader(http.StatusOK)
 		fmt.Fprintln(writer, "updated in", time.Since(start))
+		go func() {
+			log.Println("purging cf cache")
+			zoneID, err := cf.ZoneIDByName("gortc.io")
+			if err != nil {
+				log.Println("failed to get zone id:", err)
+				return
+			}
+			res, err := cf.PurgeCache(zoneID, cloudflare.PurgeCacheRequest{
+				Files: []string{
+					"https://gortc.io/",
+				},
+			})
+			if err != nil {
+				log.Println("failed to purge cache:", err)
+				return
+			}
+			if !res.Success {
+				log.Println("failed to purge cache: not succeeded")
+			} else {
+				log.Println("purged cf cache")
+			}
+		}()
 	})
 	http.HandleFunc("/ice-configuration", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")
