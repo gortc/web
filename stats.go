@@ -19,6 +19,11 @@ type stats struct {
 	Last7d  int
 	Last24h int
 	Lines   int
+	Time    time.Time
+}
+
+func (s stats) FormattedTime() string {
+	return s.Time.In(time.UTC).Format(time.RFC850)
 }
 
 type tokeiLanguageReport struct {
@@ -142,6 +147,7 @@ func getStats(fetch bool) (*stats, error) {
 		total += commits
 	}
 	return &stats{
+		Time:    time.Now(),
 		Total:   total,
 		Last30d: last30DaysTotal,
 		Last7d:  last7DaysTotal,
