@@ -22,8 +22,13 @@
     - name: update apt cache if needed
       apt: update_cache=yes cache_valid_time=3600
 
+    - name: add git ppa
+      apt_repository:
+        repo: ppa:git-core/ppa
+        state: present
+
     - name: install common packages
-      apt: pkg={{ item }} state=present update_cache=yes
+      apt: pkg={{ item }} state=latest
       with_items:
         - git
         - htop
@@ -38,15 +43,17 @@
       with_items:
         - passlib
 
-    - name: Add web user
+    - name: Add gortc user
       user:
-        name: web
+        name: gortc
         shell: /bin/bash
   tasks:
     - name: incude custom variables
       include_vars:
         file: "{{ var_file }}"
       when: var_file is defined
+
+
 
 - name: Prepare certificates
   hosts: all
@@ -71,6 +78,27 @@
     - gortc.go
     - gortc.nginx
   vars:
+    go_version_target: go version go1.11beta2 linux/amd64
+    go_tarball_checksum: sha256:ccb60f1ae6efe4fcef115db8143eb7f9ba134c63486f47b2c5176706ede35af5
+    go_tarball: go1.11beta2.linux-amd64.tar.gz
+
+    cf_api_key: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      38393836326365613430616232623633636437623935666463623064323032396232326364613661
+      3966303439323363316231316237373631613331323533340a663432323931323432353633663437
+      62636139356137636137393832376163313538613062313436393962373531323166313432373830
+      6332313337636362340a313135343335306533363562636336653864643464623937653337376231
+      39313132313933393264313032306138363330333763623332366135636533333764393463303463
+      3261383932363230333933633565653762663163613332393530
+
+    cf_api_email: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      38336130363633336432613737623534363937356465623735663236636466303166353032373565
+      3864393636383836343666313861653934363433653462370a303538663239623165616332346134
+      31323934333730383362366235663837616638626636333463633635646133633731373538636530
+      3538363363393932660a663938356233383331326165633939373438363264646634616134343630
+      6264
+
     nginx_vhosts:
       - listen: "[::]:443 ipv6only=off ssl http2"
         server_name: "{{ fqdn }}"
@@ -104,31 +132,24 @@
         remote_src: yes
         creates: /usr/local/bin/tokei
 
-    - name: install vgo
-      become: true
-      become_user: web
-      shell: /usr/local/go/bin/go get golang.org/x/vgo
-      register: vgo
-      changed_when: vgo.stderr
-
     - name: install web
       become: true
-      become_user: web
+      become_user: gortc
       notify: restart web
       git:
         repo: https://github.com/gortc/web.git
-        dest: /home/web/go/src/github.com/gortc/web
+        dest: /home/gortc/web
         force: yes
 
     - name: build
       notify: restart web
       become: true
-      become_user: web
-      shell: /home/web/go/bin/vgo build -v -o gortc-web
+      become_user: gortc
+      shell: /usr/local/go/bin/go build -v -o gortc-web
       args:
-        chdir: /home/web/go/src/github.com/gortc/web
+        chdir: /home/gortc/web
       register: build
-      changed_when: build.stderr
+      changed_when: "build.stderr"
 
     - name: install systemd service file
       template: src=web.service.j2 dest=/etc/systemd/system/web.service
