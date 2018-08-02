@@ -3,6 +3,10 @@ body {
     font-family: "Go", Arial, sans-serif;
 }
 
+a:focus {
+    outline: none;
+}
+
 a:hover, .exampleHeading .text:hover {
     text-decoration: underline;
 }
