@@ -111,7 +111,7 @@ func getStats(fetch bool) (*stats, error) {
 		if err != nil {
 			return nil, err
 		}
-		lines += rep.Go.Lines + rep.Yaml.Lines
+		lines += rep.Go.Lines + rep.Yaml.Lines + rep.Dockerfile.Lines
 		ref, err := r.Head()
 		if err != nil {
 			return nil, err
