@@ -150,8 +150,7 @@ func main() {
 		}
 		sLock.RUnlock()
 	})
-	http.HandleFunc("/hook", func(writer http.ResponseWriter, request *http.Request) {
-		// TODO(ar): check secret
+	http.HandleFunc("/hook/"+os.Getenv("GITHUB_HOOK_SECRET"), func(writer http.ResponseWriter, request *http.Request) {
 		start := time.Now()
 		err := update()
 		if err != nil {
