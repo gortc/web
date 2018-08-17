@@ -142,6 +142,7 @@ func main() {
 			return
 		}
 		w.Header().Add("Link", "</go-rtc.svg>; as=image; rel=preload")
+		w.Header().Add("Link", "</jetbrains-variant-3.svg>; as=image; rel=preload")
 		w.Header().Add("Link", "</css/main.css>; as=style; rel=preload")
 		sLock.RLock()
 		if err := t.Execute(w, s); err != nil {
