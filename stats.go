@@ -111,6 +111,11 @@ func getStats(fetch bool) (*stats, error) {
 		if err != nil {
 			return nil, err
 		}
+		if name == "dtls" {
+			// It's not fair to count vendored code.
+			// TODO: count delta.
+			rep.Go.Lines = 0
+		}
 		lines += rep.Go.Lines + rep.Yaml.Lines + rep.Dockerfile.Lines
 		ref, err := r.Head()
 		if err != nil {
