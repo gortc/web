@@ -127,10 +127,11 @@ func getStats(fetch bool) (*stats, error) {
 		})
 		var commits int
 		countAuthors := map[string]struct{}{
-			"ar@cydev.ru":     {},
-			"ernado@ya.ru":    {},
-			"mail@backkem.me": {},
-			"ar@gortc.io":     {},
+			"ar@cydev.ru":                          {},
+			"ernado@ya.ru":                         {},
+			"mail@backkem.me":                      {},
+			"ar@gortc.io":                          {},
+			"songjiayang@users.noreply.github.com": {},
 		}
 		if err = b.ForEach(func(commit *object.Commit) error {
 			if _, ok := countAuthors[commit.Author.Email]; !ok {
