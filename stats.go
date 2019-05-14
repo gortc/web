@@ -132,6 +132,7 @@ func getStats(fetch bool) (*stats, error) {
 			"mail@backkem.me":                      {},
 			"ar@gortc.io":                          {},
 			"songjiayang@users.noreply.github.com": {},
+			"a.razumov@corp.mail.ru":               {},
 		}
 		if err = b.ForEach(func(commit *object.Commit) error {
 			if _, ok := countAuthors[commit.Author.Email]; !ok {
