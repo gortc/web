@@ -30,6 +30,9 @@ var (
 	portHTTP = flag.Int("port", 3000, "http server port")
 	hostHTTP = flag.String("host", "localhost", "http server host")
 	portSTUN = flag.Int("port-stun", stun.DefaultPort, "UDP port")
+
+	importPath = "gortc.io"
+	repoPath   = "https://github.com/gortc"
 )
 
 var (
@@ -138,31 +141,8 @@ func main() {
 	}()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
-		// path: /foo
-		//       /foo/...
-		// package: foo
-		pkg := strings.TrimPrefix(r.URL.Path, "/")
-		if i := strings.Index(pkg, "/"); i != -1 {
-			pkg = pkg[:i]
-		}
-		pkg = strings.TrimSuffix(pkg, "...")
-
-		if q.Get("go-get") == "1" && pkg != "" {
-			// Custom domain support.
-			// TODO: Check github org.
-			body := strings.Replace(`<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="go-import" content="gortc.io/pkg git https://github.com/gortc/pkg.git">
-    <meta name="go-source"
-          content="gortc.io/pkg https://github.com/gortc/pkg/ https://github.com/gortc/pkg/tree/master{/dir} https://github.com/gortc/pkg/blob/master{/dir}/{file}#L{line}">
-    <meta http-equiv="refresh" content="0; url=https://godoc.org/gortc.io/pkg">
-</head>
-<body>
-Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
-</body>`, "pkg", pkg, -1)
-			fmt.Fprintln(w, body)
+		if q.Get("go-get") == "1" {
+			redirect(w, r)
 			return
 		}
 		if r.URL.Path != "/" {
