@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	cloudflare "github.com/cloudflare/cloudflare-go"
+	"github.com/cloudflare/cloudflare-go"
 	"github.com/gortc/ice"
 	"github.com/gortc/sdp"
 	"github.com/gortc/stun"
@@ -133,7 +133,7 @@ func main() {
 	go func() {
 		ticker := time.NewTicker(time.Second * 90)
 		for range ticker.C {
-			update()
+			_ = update()
 		}
 	}()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
