@@ -139,6 +139,14 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		if q.Get("go-get") == "1" {
+			// path: /foo
+			//       /foo/...
+			// package: foo
+			pkg := strings.TrimPrefix(r.URL.Path, "/")
+			if i := strings.Index(pkg, "/"); i != -1 {
+				pkg = pkg[:i]
+			}
+
 			// Custom domain support.
 			// TODO: Check github org.
 			body := strings.Replace(`<!DOCTYPE html>
@@ -152,7 +160,7 @@ func main() {
 </head>
 <body>
 Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
-</body>`, "pkg", strings.Replace(r.URL.Path, "/", "", -1), -1)
+</body>`, "pkg", pkg, -1)
 			fmt.Fprintln(w, body)
 			return
 		}
