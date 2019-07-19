@@ -138,15 +138,15 @@ func main() {
 	}()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
-		if q.Get("go-get") == "1" {
-			// path: /foo
-			//       /foo/...
-			// package: foo
-			pkg := strings.TrimPrefix(r.URL.Path, "/")
-			if i := strings.Index(pkg, "/"); i != -1 {
-				pkg = pkg[:i]
-			}
+		// path: /foo
+		//       /foo/...
+		// package: foo
+		pkg := strings.TrimPrefix(r.URL.Path, "/")
+		if i := strings.Index(pkg, "/"); i != -1 {
+			pkg = pkg[:i]
+		}
 
+		if q.Get("go-get") == "1" && pkg != "" {
 			// Custom domain support.
 			// TODO: Check github org.
 			body := strings.Replace(`<!DOCTYPE html>
