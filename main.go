@@ -141,7 +141,7 @@ func main() {
 		if q.Get("go-get") == "1" {
 			// Custom domain support.
 			// TODO: Check github org.
-			body := strings.ReplaceAll(`<!DOCTYPE html>
+			body := strings.Replace(`<!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -152,7 +152,7 @@ func main() {
 </head>
 <body>
 Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
-</body>`, "pkg", strings.Replace(r.URL.Path, "/", "", -1))
+</body>`, "pkg", strings.Replace(r.URL.Path, "/", "", -1), -1)
 			fmt.Fprintln(w, body)
 			return
 		}
