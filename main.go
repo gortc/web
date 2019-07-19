@@ -137,6 +137,25 @@ func main() {
 		}
 	}()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		if q.Get("go-get") == "1" {
+			// Custom domain support.
+			// TODO: Check github org.
+			body := strings.ReplaceAll(`<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="go-import" content="gortc.io/pkg git https://github.com/gortc/pkg.git">
+    <meta name="go-source"
+          content="gortc.io/pkg https://github.com/gortc/pkg/ https://github.com/gortc/pkg/tree/master{/dir} https://github.com/gortc/pkg/blob/master{/dir}/{file}#L{line}">
+    <meta http-equiv="refresh" content="0; url=https://godoc.org/gortc.io/pkg">
+</head>
+<body>
+Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
+</body>`, "pkg", strings.ReplaceAll(r.URL.Path, "/", ""))
+			fmt.Fprintln(w, body)
+			return
+		}
 		if r.URL.Path != "/" {
 			fs.ServeHTTP(w, r)
 			return
@@ -217,28 +236,6 @@ func main() {
 	}
 	defer mLog.Close()
 	csvLog := csv.NewWriter(mLog)
-
-	// Custom domain support.
-	for _, name := range []string{
-		"stun", "turn", "sdp", "web", "ice", "api",
-	} {
-		body := strings.Replace(`<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="go-import" content="gortc.io/pkg git https://github.com/gortc/pkg.git">
-    <meta name="go-source"
-          content="gortc.io/pkg https://github.com/gortc/pkg/ https://github.com/gortc/pkg/tree/master{/dir} https://github.com/gortc/pkg/blob/master{/dir}/{file}#L{line}">
-    <meta http-equiv="refresh" content="0; url=https://godoc.org/gortc.io/pkg">
-</head>
-<body>
-Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
-</body>`, "pkg", name, -1)
-		http.HandleFunc("/"+name+"/", func(w http.ResponseWriter, r *http.Request) {
-			defer r.Body.Close()
-			fmt.Fprint(w, body)
-		})
-	}
 
 	http.HandleFunc("/x/sdp", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
