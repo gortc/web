@@ -91,6 +91,15 @@ type iceConfiguration struct {
 	Servers []iceServerConfiguration `json:"iceServers"`
 }
 
+func redirectToDocs(path string) bool {
+	switch path {
+	case "/stun", "/turn", "/turnc", "/sdp", "/ice", "/neo":
+		return true
+	default:
+		return false
+	}
+}
+
 func main() {
 	flag.Parse()
 	cf, err := cloudflare.New(
@@ -141,7 +150,7 @@ func main() {
 	}()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
-		if q.Get("go-get") == "1" {
+		if q.Get("go-get") == "1" || redirectToDocs(r.URL.Path) {
 			r.Host = "gortc.io"
 			redirect(w, r)
 			return
