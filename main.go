@@ -142,6 +142,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		if q.Get("go-get") == "1" {
+			r.Host = "gortc.io"
 			redirect(w, r)
 			return
 		}
