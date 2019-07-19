@@ -145,6 +145,7 @@ func main() {
 		if i := strings.Index(pkg, "/"); i != -1 {
 			pkg = pkg[:i]
 		}
+		pkg = strings.TrimSuffix(pkg, "...")
 
 		if q.Get("go-get") == "1" && pkg != "" {
 			// Custom domain support.
