@@ -152,7 +152,7 @@ func main() {
 </head>
 <body>
 Nothing to see here; <a href="https://godoc.org/gortc.io/pkg">move along</a>.
-</body>`, "pkg", strings.ReplaceAll(r.URL.Path, "/", ""))
+</body>`, "pkg", strings.Replace(r.URL.Path, "/", "", -1))
 			fmt.Fprintln(w, body)
 			return
 		}
